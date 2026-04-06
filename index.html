@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Moods by Gal â Your Spotify Moodboard</title>
+<title>Moods by Gal - Your Spotify Moodboard</title>
 <meta name="description" content="Turn your Spotify library into a beautiful moodboard. Discover your music taste organized by vibes.">
 <meta name="referrer" content="no-referrer">
 <style>
@@ -43,7 +43,6 @@
   .landing .cta-btn svg{width:22px;height:22px}
   .landing-features{display:flex;gap:40px;margin-top:56px;flex-wrap:wrap;justify-content:center}
   .landing-feature{text-align:center;max-width:180px}
-  .landing-feature .icon{font-size:1.8rem;margin-bottom:8px}
   .landing-feature h3{font-size:.85rem;font-weight:600;margin-bottom:4px;color:#ddd}
   .landing-feature p{font-size:.75rem;color:#666;line-height:1.4}
 
@@ -54,7 +53,6 @@
   .type-cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:800px}
   .type-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:32px 28px;width:220px;cursor:pointer;transition:all .3s;text-align:center}
   .type-card:hover{background:rgba(255,255,255,0.08);transform:translateY(-4px);border-color:rgba(29,185,84,0.3);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
-  .type-card .t-icon{font-size:2.5rem;margin-bottom:14px}
   .type-card h3{font-size:1.1rem;font-weight:700;margin-bottom:6px}
   .type-card p{font-size:.78rem;color:#888;line-height:1.5}
   .type-card .t-badge{display:inline-block;margin-top:12px;background:rgba(29,185,84,0.15);color:#1DB954;padding:4px 12px;border-radius:12px;font-size:.7rem;font-weight:600}
@@ -152,17 +150,14 @@
   </button>
   <div class="landing-features">
     <div class="landing-feature">
-      <div class="icon">â¡</div>
       <h3>Instant</h3>
       <p>Your moodboard is generated in seconds from your real library</p>
     </div>
     <div class="landing-feature">
-      <div class="icon">ð¨</div>
       <h3>7 Moods</h3>
       <p>Morning, Late Night, Workout, Melancholy, Chill, Party, Romantic</p>
     </div>
     <div class="landing-feature">
-      <div class="icon">ð</div>
       <h3>Shareable</h3>
       <p>Share your moodboard and let friends discover your taste</p>
     </div>
@@ -176,19 +171,16 @@
     <p class="sub" id="type-greeting">What do you want to organize by mood?</p>
     <div class="type-cards">
       <div class="type-card" onclick="generateMoodboard('albums')">
-        <div class="t-icon">ð¿</div>
         <h3>My Albums</h3>
         <p>Your saved albums organized into mood categories</p>
         <span class="t-badge" id="albums-count">Loading...</span>
       </div>
       <div class="type-card" onclick="generateMoodboard('tracks')">
-        <div class="t-icon">ðµ</div>
         <h3>My Liked Songs</h3>
         <p>Your liked tracks grouped by vibe and energy</p>
         <span class="t-badge" id="tracks-count">Loading...</span>
       </div>
       <div class="type-card" onclick="generateMoodboard('artists')">
-        <div class="t-icon">ð¤</div>
         <h3>My Artists</h3>
         <p>Your followed artists sorted by the mood they bring</p>
         <span class="t-badge" id="artists-count">Loading...</span>
@@ -202,7 +194,7 @@
   <div class="top-bar">
     <div id="user-area"></div>
     <div style="display:flex;gap:10px;align-items:center">
-      <button class="logout-btn" onclick="backToSelector()" id="back-btn">â Back</button>
+      <button class="logout-btn" onclick="backToSelector()" id="back-btn">Back</button>
       <button class="logout-btn" onclick="logoutSpotify()" id="logout-btn">Logout</button>
     </div>
   </div>
@@ -230,7 +222,7 @@
     </div>
   </div>
   <footer>
-    <a href="#" onclick="event.preventDefault();window.open(window.location.origin+window.location.pathname,'_blank')">Moods by Gal</a> Â· Built with Spotify Web API Â· Albums classified by genre &amp; mood heuristics
+    <a href="#" onclick="event.preventDefault();window.open(window.location.origin+window.location.pathname,'_blank')">Moods by Gal</a> &middot; Built with Spotify Web API &middot; Albums classified by genre &amp; mood heuristics
   </footer>
 </div>
 
@@ -243,16 +235,16 @@ const REDIRECT_URI = window.location.origin + window.location.pathname;
 const SCOPES = 'user-read-private user-read-email user-library-read user-follow-read user-top-read';
 
 // =============================================
-// GENRE â MOOD MAPPING ENGINE
+// GENRE TO MOOD MAPPING ENGINE
 // =============================================
 const MOOD_CONFIG = [
-  { id: 'morning',    label: 'Morning Sunshine',  emoji: 'ð', meta: 'Bright, uplifting, start-your-day energy' },
-  { id: 'chill',      label: 'Chill & Focus',     emoji: 'ð§', meta: 'Calm, ambient, deep work vibes' },
-  { id: 'workout',    label: 'Workout Energy',    emoji: 'ð¥', meta: 'High energy, pump-up, let\'s go' },
-  { id: 'latenight',  label: 'Late Night',        emoji: 'ð', meta: 'Smooth, atmospheric, after-hours' },
-  { id: 'melancholy', label: 'Melancholy',        emoji: 'ð§ï¸', meta: 'Reflective, emotional, introspective' },
-  { id: 'party',      label: 'Party & Social',    emoji: 'ð', meta: 'Dance, fun, social energy' },
-  { id: 'romantic',   label: 'Romantic',           emoji: 'ð', meta: 'Love, warmth, intimate moments' }
+  { id: 'morning',    label: 'Morning Sunshine',  emoji: '', meta: 'Bright, uplifting, start-your-day energy' },
+  { id: 'chill',      label: 'Chill & Focus',     emoji: '', meta: 'Calm, ambient, deep work vibes' },
+  { id: 'workout',    label: 'Workout Energy',    emoji: '', meta: 'High energy, pump-up, let\'s go' },
+  { id: 'latenight',  label: 'Late Night',        emoji: '', meta: 'Smooth, atmospheric, after-hours' },
+  { id: 'melancholy', label: 'Melancholy',        emoji: '', meta: 'Reflective, emotional, introspective' },
+  { id: 'party',      label: 'Party & Social',    emoji: '', meta: 'Dance, fun, social energy' },
+  { id: 'romantic',   label: 'Romantic',           emoji: '', meta: 'Love, warmth, intimate moments' }
 ];
 
 // Genre keywords mapped to mood IDs (order = priority)
@@ -310,7 +302,7 @@ const GENRE_MOOD_MAP = {
 
 // Score an array of genre strings against mood map
 function categorizByGenres(genres) {
-  if (!genres || genres.length === 0) return 'chill'; // default
+  if (!genres || genres.length === 0) return null; // return null so we can fallback
   const scores = {};
   MOOD_CONFIG.forEach(m => scores[m.id] = 0);
   const genreStr = genres.join(' ').toLowerCase();
@@ -322,12 +314,48 @@ function categorizByGenres(genres) {
     }
   }
   // Find highest score
-  let best = 'chill';
+  let best = null;
   let bestScore = 0;
   for (const [moodId, score] of Object.entries(scores)) {
     if (score > bestScore) { bestScore = score; best = moodId; }
   }
-  return best;
+  return best; // null if no keywords matched
+}
+
+// Categorize by audio features (energy, valence, danceability, acousticness, tempo)
+function categorizeByAudioFeatures(f) {
+  if (!f) return null;
+  const { energy, valence, danceability, acousticness, tempo } = f;
+
+  // Workout: high energy + fast tempo
+  if (energy > 0.72 && tempo > 118) return 'workout';
+  // Party: very danceable + positive mood
+  if (danceability > 0.68 && valence > 0.55 && energy > 0.55) return 'party';
+  // Melancholy: sad + low energy
+  if (valence < 0.25 && energy < 0.5) return 'melancholy';
+  // Morning: acoustic, positive, gentle
+  if (acousticness > 0.5 && valence > 0.45 && energy < 0.65) return 'morning';
+  // Late Night: low energy, darker mood, not acoustic
+  if (energy < 0.4 && valence < 0.45 && acousticness < 0.5) return 'latenight';
+  // Romantic: moderate everything, slower
+  if (energy < 0.55 && tempo < 115 && valence > 0.25 && valence < 0.65 && danceability < 0.65) return 'romantic';
+  // Chill: low energy catch-all
+  if (energy < 0.5) return 'chill';
+  // Energetic but didn't match workout/party
+  if (danceability > 0.65) return 'party';
+  if (energy > 0.65) return 'workout';
+  return 'chill';
+}
+
+// Deterministic mood from item name (last resort so items spread across moods)
+function categorizeByNameHash(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash |= 0;
+  }
+  const moodIds = MOOD_CONFIG.map(m => m.id);
+  return moodIds[Math.abs(hash) % moodIds.length];
 }
 
 // =============================================
@@ -429,7 +457,7 @@ function getBestImage(images) {
   return images[0].url;
 }
 
-// Handle broken images â replace with styled fallback
+// Handle broken images - replace with styled fallback
 function handleImgError(img) {
   const name = img.alt || '';
   const wrap = img.parentElement;
@@ -446,14 +474,17 @@ async function fetchSavedAlbums(token) {
     token,
     data => data.items.map(item => {
       const a = item.album;
-      const artistGenres = a.artists.map(ar => ar.id);
+      // Grab first track ID for audio features fallback
+      const firstTrackId = (a.tracks && a.tracks.items && a.tracks.items.length > 0)
+        ? a.tracks.items[0].id : null;
       return {
         name: a.name,
         artist: a.artists.map(ar => ar.name).join(', '),
         img: getBestImage(a.images),
         url: a.external_urls.spotify,
         artistIds: a.artists.map(ar => ar.id),
-        genres: a.genres || []
+        genres: a.genres || [],
+        trackId: firstTrackId
       };
     })
   );
@@ -471,7 +502,8 @@ async function fetchLikedSongs(token) {
         img: getBestImage(t.album ? t.album.images : null),
         url: t.external_urls.spotify,
         artistIds: t.artists.map(ar => ar.id),
-        genres: []
+        genres: [],
+        trackId: t.id
       };
     }),
     150
@@ -511,20 +543,20 @@ async function enrichWithArtistGenres(items, token) {
   });
   const uniqueIds = [...allIds];
 
-      // Fetch artists individually in parallel batches of 10
-      // (batch /v1/artists?ids= endpoint returns 403 for dev-mode apps)
-      const artistGenreMap = {};
-      for (let i = 0; i < uniqueIds.length; i += 10) {
-        const batch = uniqueIds.slice(i, i + 10);
-        const results = await Promise.all(batch.map(id =>
-          fetch('https://api.spotify.com/v1/artists/' + id, {
-            headers: { 'Authorization': 'Bearer ' + token }
-          }).then(r => r.ok ? r.json() : null).catch(() => null)
-        ));
-        results.forEach(a => {
-          if (a && a.id) artistGenreMap[a.id] = a.genres || [];
-        });
-      }
+  // Fetch artists individually in parallel batches of 10
+  // (batch /v1/artists?ids= endpoint returns 403 for dev-mode apps)
+  const artistGenreMap = {};
+  for (let i = 0; i < uniqueIds.length; i += 10) {
+    const batch = uniqueIds.slice(i, i + 10);
+    const results = await Promise.all(batch.map(id =>
+      fetch('https://api.spotify.com/v1/artists/' + id, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).then(r => r.ok ? r.json() : null).catch(() => null)
+    ));
+    results.forEach(a => {
+      if (a && a.id) artistGenreMap[a.id] = a.genres || [];
+    });
+  }
 
   // Merge genres into items
   items.forEach(item => {
@@ -534,6 +566,65 @@ async function enrichWithArtistGenres(items, token) {
         if (artistGenreMap[id]) artistGenreMap[id].forEach(g => merged.add(g));
       });
       item.genres = [...merged];
+    }
+  });
+  return items;
+}
+
+// Enrich items with audio features (fallback when genres are empty)
+async function enrichWithAudioFeatures(items, token) {
+  const trackIds = items
+    .map((item, idx) => ({ trackId: item.trackId, idx }))
+    .filter(x => x.trackId);
+
+  if (trackIds.length === 0) {
+    console.log('[MoodBoard] No track IDs available for audio features');
+    return items;
+  }
+
+  // Fetch audio features in batches of 100 (Spotify limit)
+  const featuresMap = {};
+  for (let i = 0; i < trackIds.length; i += 100) {
+    const batch = trackIds.slice(i, i + 100);
+    const ids = batch.map(x => x.trackId).join(',');
+    try {
+      const res = await fetch('https://api.spotify.com/v1/audio-features?ids=' + ids, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audio_features) {
+          data.audio_features.forEach(f => {
+            if (f && f.id) featuresMap[f.id] = f;
+          });
+        }
+      } else {
+        console.log('[MoodBoard] Audio features batch failed:', res.status);
+        // Try individual fetches as fallback
+        for (const x of batch) {
+          try {
+            const r = await fetch('https://api.spotify.com/v1/audio-features/' + x.trackId, {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (r.ok) {
+              const f = await r.json();
+              if (f && f.id) featuresMap[f.id] = f;
+            }
+          } catch(e) { /* skip */ }
+        }
+      }
+    } catch(e) {
+      console.log('[MoodBoard] Audio features fetch error:', e);
+    }
+  }
+
+  const enriched = Object.keys(featuresMap).length;
+  console.log('[MoodBoard] Audio features: ' + enriched + '/' + trackIds.length + ' tracks enriched');
+
+  // Attach features to items
+  items.forEach(item => {
+    if (item.trackId && featuresMap[item.trackId]) {
+      item.audioFeatures = featuresMap[item.trackId];
     }
   });
   return items;
@@ -576,14 +667,38 @@ async function generateMoodboard(type) {
       items = await enrichWithArtistGenres(items, currentToken);
     }
 
-    // Categorize into moods
+    // Check how many items got genres
+    const withGenres = items.filter(i => i.genres && i.genres.length > 0).length;
+    console.log('[MoodBoard] Genre enrichment: ' + withGenres + '/' + items.length + ' items have genres');
+
+    // If most items lack genres, fetch audio features as fallback
+    if (withGenres < items.length * 0.3 && type !== 'artists') {
+      showLoadingText('Analyzing audio features...');
+      items = await enrichWithAudioFeatures(items, currentToken);
+    }
+
+    // Categorize into moods using layered approach:
+    // 1. Genre-based (if genres available and match)
+    // 2. Audio features (if available)
+    // 3. Name hash (last resort, ensures spread)
     showLoadingText('Sorting by mood...');
     moodboardData = {};
     MOOD_CONFIG.forEach(m => moodboardData[m.id] = []);
+    let genreHits = 0, audioHits = 0, hashHits = 0;
     items.forEach(item => {
-      const mood = categorizByGenres(item.genres);
+      let mood = categorizByGenres(item.genres);
+      if (mood) { genreHits++; }
+      if (!mood && item.audioFeatures) {
+        mood = categorizeByAudioFeatures(item.audioFeatures);
+        if (mood) audioHits++;
+      }
+      if (!mood) {
+        mood = categorizeByNameHash(item.name + item.artist);
+        hashHits++;
+      }
       moodboardData[mood].push(item);
     });
+    console.log('[MoodBoard] Categorization: genre=' + genreHits + ' audio=' + audioHits + ' hash=' + hashHits);
 
     // Render
     showLoading(false);
@@ -662,11 +777,11 @@ function renderMoodboard(type, totalItems) {
     });
 
     card.innerHTML =
-      '<h2>' + mood.emoji + ' ' + mood.label + '</h2>' +
+      '<h2>' + mood.label + '</h2>' +
       '<div class="mood-meta">' + mood.meta + '</div>' +
       '<div class="album-count">' + items.length + ' ' + typeLabels[type].toLowerCase() + '</div>' +
       (previewHtml ? '<div class="preview-row">' + previewHtml + '</div>' : '') +
-      '<div class="chevron">â¼</div>';
+      '<div class="chevron">&#9660;</div>';
 
     if (!isEmpty) {
       card.onclick = () => toggleSection(mood.id);
@@ -697,7 +812,7 @@ function renderMoodboard(type, totalItems) {
     section.innerHTML =
       '<div class="album-section-inner">' +
         '<div class="section-header">' +
-          '<h3>' + mood.emoji + ' ' + mood.label + ' (' + items.length + ')</h3>' +
+          '<h3>' + mood.label + ' (' + items.length + ')</h3>' +
           '<button class="close-btn" onclick="toggleSection(\'' + mood.id + '\')">Close</button>' +
         '</div>' +
         '<div class="album-grid">' + gridHtml + '</div>' +
