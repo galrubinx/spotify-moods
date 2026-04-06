@@ -3,13 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spotify Albums by Mood</title>
+<title>Moods by Gal â Your Spotify Moodboard</title>
+<meta name="description" content="Turn your Spotify library into a beautiful moodboard. Discover your music taste organized by vibes.">
+<meta name="referrer" content="no-referrer">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Inter',sans-serif;background:#0a0a0a;color:#fff;min-height:100vh}
+  body{font-family:'Inter',sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;overflow-x:hidden}
 
-  /* Top bar with user profile */
+  /* Loading overlay */
+  .loading-overlay{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .4s}
+  .loading-overlay.hidden{opacity:0;pointer-events:none}
+  .loading-spinner{width:48px;height:48px;border:3px solid rgba(29,185,84,0.2);border-top-color:#1DB954;border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{color:#888;font-size:.9rem;font-weight:400}
+  .loading-progress{color:#1DB954;font-size:.8rem;font-weight:500}
+
+  /* Top bar */
   .top-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;max-width:1400px;margin:0 auto}
   .user-profile{display:flex;align-items:center;gap:12px;cursor:pointer}
   .user-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #1DB954}
@@ -23,10 +33,42 @@
   .logout-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:#888;padding:6px 14px;border-radius:16px;font-size:.72rem;font-family:inherit;cursor:pointer;transition:all .2s}
   .logout-btn:hover{border-color:rgba(255,255,255,0.3);color:#fff}
 
-  .hero{text-align:center;padding:40px 20px 48px;background:linear-gradient(180deg,rgba(29,185,84,0.3) 0%,#0a0a0a 100%)}
-  .hero h1{font-size:3rem;font-weight:800;letter-spacing:-1.5px;margin-bottom:8px}
+  /* Landing page */
+  .landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px}
+  .landing-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(29,185,84,0.12);border:1px solid rgba(29,185,84,0.25);padding:6px 16px;border-radius:20px;font-size:.75rem;font-weight:500;color:#1DB954;margin-bottom:28px;letter-spacing:.3px}
+  .landing h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:16px;background:linear-gradient(135deg,#fff 0%,#a0a0a0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .landing .subtitle{color:#888;font-size:clamp(1rem,2vw,1.3rem);font-weight:300;max-width:520px;line-height:1.6;margin-bottom:40px}
+  .landing .cta-btn{display:inline-flex;align-items:center;gap:10px;background:#1DB954;color:#000;border:none;padding:16px 36px;border-radius:30px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .25s;text-decoration:none;box-shadow:0 4px 24px rgba(29,185,84,0.3)}
+  .landing .cta-btn:hover{background:#1ed760;transform:scale(1.05);box-shadow:0 8px 32px rgba(29,185,84,0.4)}
+  .landing .cta-btn svg{width:22px;height:22px}
+  .landing-features{display:flex;gap:40px;margin-top:56px;flex-wrap:wrap;justify-content:center}
+  .landing-feature{text-align:center;max-width:180px}
+  .landing-feature .icon{font-size:1.8rem;margin-bottom:8px}
+  .landing-feature h3{font-size:.85rem;font-weight:600;margin-bottom:4px;color:#ddd}
+  .landing-feature p{font-size:.75rem;color:#666;line-height:1.4}
+
+  /* Moodboard type selector */
+  .type-selector{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px}
+  .type-selector h2{font-size:2rem;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+  .type-selector .sub{color:#888;font-size:1rem;font-weight:300;margin-bottom:40px}
+  .type-cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:800px}
+  .type-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:32px 28px;width:220px;cursor:pointer;transition:all .3s;text-align:center}
+  .type-card:hover{background:rgba(255,255,255,0.08);transform:translateY(-4px);border-color:rgba(29,185,84,0.3);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+  .type-card .t-icon{font-size:2.5rem;margin-bottom:14px}
+  .type-card h3{font-size:1.1rem;font-weight:700;margin-bottom:6px}
+  .type-card p{font-size:.78rem;color:#888;line-height:1.5}
+  .type-card .t-badge{display:inline-block;margin-top:12px;background:rgba(29,185,84,0.15);color:#1DB954;padding:4px 12px;border-radius:12px;font-size:.7rem;font-weight:600}
+
+  /* Moodboard view */
+  .moodboard-view{display:none}
+  .hero{text-align:center;padding:40px 20px 48px;background:linear-gradient(180deg,rgba(29,185,84,0.25) 0%,#0a0a0a 100%)}
+  .hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:800;letter-spacing:-1.5px;margin-bottom:8px}
   .hero p{color:#a0a0a0;font-size:1.1rem;font-weight:300}
-  .hero .stats{margin-top:18px;display:flex;justify-content:center;gap:32px;font-size:.85rem;color:#1DB954;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .hero .stats{margin-top:18px;display:flex;justify-content:center;gap:32px;font-size:.82rem;color:#1DB954;font-weight:600;text-transform:uppercase;letter-spacing:.5px;flex-wrap:wrap}
+  .hero .share-row{margin-top:20px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+  .share-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#ccc;padding:8px 18px;border-radius:20px;font-size:.78rem;font-weight:500;font-family:inherit;cursor:pointer;transition:all .2s}
+  .share-btn:hover{background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.2)}
+  .share-btn.copied{background:rgba(29,185,84,0.15);border-color:rgba(29,185,84,0.3);color:#1DB954}
   .container{max-width:1400px;margin:0 auto;padding:32px 24px}
 
   /* Mood Cards Grid */
@@ -42,10 +84,11 @@
   .mood-card:hover .preview-row img{opacity:1}
   .mood-card .chevron{position:absolute;right:20px;top:50%;transform:translateY(-50%);color:#555;font-size:1.2rem;transition:transform .3s}
   .mood-card.active .chevron{transform:translateY(-50%) rotate(180deg);color:#1DB954}
+  .mood-card.empty{opacity:.35;pointer-events:none}
 
   /* Expanded Album Section */
-  .album-section{max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .3s ease,margin .3s ease;opacity:0;margin:0 0 0 0}
-  .album-section.open{max-height:5000px;opacity:1;margin:0 0 40px 0}
+  .album-section{max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .3s ease,margin .3s ease;opacity:0;margin:0}
+  .album-section.open{max-height:8000px;opacity:1;margin:0 0 40px 0}
   .album-section-inner{padding:24px 0}
   .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06)}
   .section-header h3{font-size:1.2rem;font-weight:600}
@@ -63,40 +106,233 @@
   .play-badge svg{width:16px;height:16px;fill:#000;margin-left:2px}
   .album-name{font-size:.8rem;font-weight:600;line-height:1.3;margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .album-artist{font-size:.72rem;color:#666;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .img-placeholder{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(29,185,84,0.1) 0%,rgba(255,255,255,0.04) 100%);border-radius:8px;color:#555;font-size:.68rem;text-align:center;padding:12px;font-weight:500;line-height:1.3}
 
-  .img-placeholder{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);border-radius:8px;color:#444;font-size:.7rem;text-align:center;padding:8px}
+  /* CTA Banner */
+  .cta-banner{background:linear-gradient(135deg,rgba(29,185,84,0.15) 0%,rgba(29,185,84,0.05) 100%);border:1px solid rgba(29,185,84,0.2);border-radius:20px;padding:40px;text-align:center;margin:40px 0}
+  .cta-banner h2{font-size:1.6rem;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+  .cta-banner p{color:#888;font-size:.95rem;margin-bottom:20px}
+  .cta-banner .cta-btn{display:inline-flex;align-items:center;gap:8px;background:#1DB954;color:#000;border:none;padding:14px 32px;border-radius:28px;font-size:.92rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .25s}
+  .cta-banner .cta-btn:hover{background:#1ed760;transform:scale(1.04)}
+  .cta-banner .cta-btn svg{width:20px;height:20px}
+
   footer{text-align:center;padding:48px 20px;color:#333;font-size:.78rem;border-top:1px solid rgba(255,255,255,0.04)}
+  footer a{color:#1DB954;text-decoration:none}
+
   @media(max-width:600px){
-    .hero h1{font-size:2rem}
     .mood-cards{grid-template-columns:1fr}
     .album-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
     .mood-card .preview-row img{width:40px;height:40px}
+    .type-cards{flex-direction:column;align-items:center}
+    .type-card{width:100%;max-width:300px}
+    .hero .stats{gap:16px}
   }
 </style>
 </head>
 <body>
-<div class="top-bar">
-  <div id="user-area">
-    <!-- Filled by JS: either login button or user profile -->
+
+<!-- Loading overlay -->
+<div class="loading-overlay hidden" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Connecting to Spotify...</div>
+  <div class="loading-progress" id="loading-progress"></div>
+</div>
+
+<!-- LANDING PAGE -->
+<div id="landing-page" class="landing">
+  <div class="landing-badge">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+    Powered by Spotify
   </div>
-  <div id="logout-area"></div>
+  <h1>Your Music,<br>Sorted by Mood</h1>
+  <p class="subtitle">Connect your Spotify and instantly see your saved albums, liked songs, or followed artists organized into beautiful mood categories.</p>
+  <button class="cta-btn" onclick="loginWithSpotify()">
+    <svg viewBox="0 0 24 24" fill="#000"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+    Create Your Moodboard
+  </button>
+  <div class="landing-features">
+    <div class="landing-feature">
+      <div class="icon">â¡</div>
+      <h3>Instant</h3>
+      <p>Your moodboard is generated in seconds from your real library</p>
+    </div>
+    <div class="landing-feature">
+      <div class="icon">ð¨</div>
+      <h3>7 Moods</h3>
+      <p>Morning, Late Night, Workout, Melancholy, Chill, Party, Romantic</p>
+    </div>
+    <div class="landing-feature">
+      <div class="icon">ð</div>
+      <h3>Shareable</h3>
+      <p>Share your moodboard and let friends discover your taste</p>
+    </div>
+  </div>
 </div>
-<div class="hero">
-  <h1>Spotify Albums by Mood</h1>
-  <p id="hero-subtitle">140 albums, organized by vibe</p>
-  <div class="stats"><span>140 Albums</span><span>7 Moods</span><span>BPM-Informed</span></div>
+
+<!-- TYPE SELECTOR -->
+<div id="type-selector" style="display:none">
+  <div class="type-selector">
+    <h2>Choose Your Moodboard</h2>
+    <p class="sub" id="type-greeting">What do you want to organize by mood?</p>
+    <div class="type-cards">
+      <div class="type-card" onclick="generateMoodboard('albums')">
+        <div class="t-icon">ð¿</div>
+        <h3>My Albums</h3>
+        <p>Your saved albums organized into mood categories</p>
+        <span class="t-badge" id="albums-count">Loading...</span>
+      </div>
+      <div class="type-card" onclick="generateMoodboard('tracks')">
+        <div class="t-icon">ðµ</div>
+        <h3>My Liked Songs</h3>
+        <p>Your liked tracks grouped by vibe and energy</p>
+        <span class="t-badge" id="tracks-count">Loading...</span>
+      </div>
+      <div class="type-card" onclick="generateMoodboard('artists')">
+        <div class="t-icon">ð¤</div>
+        <h3>My Artists</h3>
+        <p>Your followed artists sorted by the mood they bring</p>
+        <span class="t-badge" id="artists-count">Loading...</span>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="container">
-  <div class="mood-cards" id="mood-cards"></div>
-  <div id="sections-container"></div>
+
+<!-- MOODBOARD VIEW -->
+<div id="moodboard-view" class="moodboard-view">
+  <div class="top-bar">
+    <div id="user-area"></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="logout-btn" onclick="backToSelector()" id="back-btn">â Back</button>
+      <button class="logout-btn" onclick="logoutSpotify()" id="logout-btn">Logout</button>
+    </div>
+  </div>
+  <div class="hero">
+    <h1 id="moodboard-title">My Albums by Mood</h1>
+    <p id="hero-subtitle">Organized by vibe</p>
+    <div class="stats" id="stats-row"></div>
+    <div class="share-row">
+      <button class="share-btn" onclick="copyShareLink()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <span id="share-text">Copy Link</span>
+      </button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="mood-cards" id="mood-cards"></div>
+    <div id="sections-container"></div>
+    <div class="cta-banner">
+      <h2>Discover Your Music Moods</h2>
+      <p>See how your Spotify library looks organized by vibe</p>
+      <button class="cta-btn" onclick="window.open(window.location.origin+window.location.pathname,'_blank')">
+        <svg viewBox="0 0 24 24" fill="#000" width="20" height="20"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Create Your Own Moodboard
+      </button>
+    </div>
+  </div>
+  <footer>
+    <a href="#" onclick="event.preventDefault();window.open(window.location.origin+window.location.pathname,'_blank')">Moods by Gal</a> Â· Built with Spotify Web API Â· Albums classified by genre &amp; mood heuristics
+  </footer>
 </div>
-<footer>Built with Spotify Web API &middot; Albums classified by estimated BPM ranges &amp; genre characteristics</footer>
+
 <script>
-// ---- Spotify OAuth (PKCE Flow) ----
+// =============================================
+// CONFIG
+// =============================================
 const SPOTIFY_CLIENT_ID = '6327aba2bbaf4fbcba4ef47ded399b81';
 const REDIRECT_URI = window.location.origin + window.location.pathname;
-const SCOPES = 'user-read-private user-read-email';
+const SCOPES = 'user-read-private user-read-email user-library-read user-follow-read user-top-read';
 
+// =============================================
+// GENRE â MOOD MAPPING ENGINE
+// =============================================
+const MOOD_CONFIG = [
+  { id: 'morning',    label: 'Morning Sunshine',  emoji: 'ð', meta: 'Bright, uplifting, start-your-day energy' },
+  { id: 'chill',      label: 'Chill & Focus',     emoji: 'ð§', meta: 'Calm, ambient, deep work vibes' },
+  { id: 'workout',    label: 'Workout Energy',    emoji: 'ð¥', meta: 'High energy, pump-up, let\'s go' },
+  { id: 'latenight',  label: 'Late Night',        emoji: 'ð', meta: 'Smooth, atmospheric, after-hours' },
+  { id: 'melancholy', label: 'Melancholy',        emoji: 'ð§ï¸', meta: 'Reflective, emotional, introspective' },
+  { id: 'party',      label: 'Party & Social',    emoji: 'ð', meta: 'Dance, fun, social energy' },
+  { id: 'romantic',   label: 'Romantic',           emoji: 'ð', meta: 'Love, warmth, intimate moments' }
+];
+
+// Genre keywords mapped to mood IDs (order = priority)
+const GENRE_MOOD_MAP = {
+  morning: [
+    'sunshine pop','morning','happy','indie pop','folk pop','chamber pop','twee',
+    'acoustic pop','bubblegum','surf','ska','ukulele','feelgood','bright',
+    'indie folk','singer-songwriter','stomp and holler','lilith','new americana',
+    'folk','americana','bluegrass','country','roots','celtic','mandolin'
+  ],
+  chill: [
+    'chillwave','chillhop','lo-fi','lofi','downtempo','ambient','new age',
+    'study','minimal','drone','meditation','sleep','focus','chill',
+    'vaporwave','mallsoft','slushwave','chillsynth','synthwave',
+    'dream pop','shoegaze','ethereal','space','post-rock','slowcore',
+    'instrumental','classical','piano','orchestral','chamber','baroque',
+    'soundtrack','score','cinematic','neoclassical'
+  ],
+  workout: [
+    'edm','electronic','dance','drum and bass','dnb','dubstep','hardstyle',
+    'techno','trance','house','big room','electro','bass','trap','grime',
+    'punk','hardcore','metal','thrash','death metal','heavy metal','hard rock',
+    'crossfit','workout','gym','power','energy','aggressive',
+    'hip hop','rap','crunk','hyphy','bounce','gangsta','drill'
+  ],
+  latenight: [
+    'jazz','smooth jazz','nu jazz','acid jazz','bebop','cool jazz','fusion',
+    'r&b','neo soul','soul','motown','quiet storm','urban contemporary',
+    'trip hop','trip-hop','downtempo','lounge','bossa nova','mpb',
+    'late night','night','dark','noir','torch song','cabaret','blues'
+  ],
+  melancholy: [
+    'sad','emo','post-punk','gothic','darkwave','coldwave','deathrock',
+    'doom','sludge','black metal','atmospheric','depressive',
+    'melancholy','melancholia','rainy','heartbreak','funeral',
+    'grunge','alternative rock','noise rock','art rock',
+    'midwest emo','screamo','math rock','post-hardcore',
+    'singer-songwriter','folk','indie','chamber pop'
+  ],
+  party: [
+    'pop','dance pop','electropop','synthpop','disco','nu disco',
+    'reggaeton','latin','latin pop','tropical','dancehall','soca',
+    'afrobeats','afropop','amapiano','funk','p funk','go-go',
+    'party','club','dj','remix','mashup','eurodance','italo disco',
+    'k-pop','j-pop','c-pop','idol'
+  ],
+  romantic: [
+    'romance','love','ballad','power ballad','slow jam',
+    'bossa nova','french pop','chanson','fado','bolero','tango',
+    'smooth','sensual','intimate','serenade','crooner',
+    'adult contemporary','easy listening','soft rock','yacht rock',
+    'bedroom pop','indie r&b','alternative r&b'
+  ]
+};
+
+// Score an array of genre strings against mood map
+function categorizByGenres(genres) {
+  if (!genres || genres.length === 0) return 'chill'; // default
+  const scores = {};
+  MOOD_CONFIG.forEach(m => scores[m.id] = 0);
+  const genreStr = genres.join(' ').toLowerCase();
+  for (const [moodId, keywords] of Object.entries(GENRE_MOOD_MAP)) {
+    for (const kw of keywords) {
+      if (genreStr.includes(kw)) {
+        scores[moodId] += 1;
+      }
+    }
+  }
+  // Find highest score
+  let best = 'chill';
+  let bestScore = 0;
+  for (const [moodId, score] of Object.entries(scores)) {
+    if (score > bestScore) { bestScore = score; best = moodId; }
+  }
+  return best;
+}
+
+// =============================================
+// SPOTIFY OAUTH (PKCE)
+// =============================================
 function generateRandomString(length) {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const values = crypto.getRandomValues(new Uint8Array(length));
@@ -115,10 +351,7 @@ function base64encode(input) {
 }
 
 async function loginWithSpotify() {
-  if (!SPOTIFY_CLIENT_ID) {
-    alert('Spotify Client ID not configured.');
-    return;
-  }
+  if (!SPOTIFY_CLIENT_ID) { alert('Spotify Client ID not configured.'); return; }
   const codeVerifier = generateRandomString(64);
   localStorage.setItem('code_verifier', codeVerifier);
   const hashed = await sha256(codeVerifier);
@@ -166,39 +399,407 @@ async function fetchSpotifyProfile(token) {
   }
 }
 
-function renderLoginButton() {
-  document.getElementById('user-area').innerHTML = '<button class="spotify-login-btn" onclick="loginWithSpotify()"><svg viewBox="0 0 24 24"><path fill="#000" d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>Connect Spotify</button>';
+// =============================================
+// SPOTIFY DATA FETCHERS
+// =============================================
+async function fetchAllPages(url, token, extractItems, maxItems = 200) {
+  let items = [];
+  let next = url;
+  while (next && items.length < maxItems) {
+    const res = await fetch(next, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) break;
+    const data = await res.json();
+    const extracted = extractItems(data);
+    items = items.concat(extracted);
+    next = data.next || (data.artists ? data.artists.next : null);
+    updateLoadingProgress(items.length);
+  }
+  return items;
 }
 
-function renderUserProfile(profile) {
-  const imgSrc = profile.images && profile.images.length > 0 ? profile.images[0].url : '';
-  const name = profile.display_name || profile.id;
-  const sub = document.getElementById('hero-subtitle');
-  sub.textContent = name + "'s library \u2014 140 albums, organized by vibe";
+function updateLoadingProgress(count) {
+  const el = document.getElementById('loading-progress');
+  if (el) el.textContent = count + ' items fetched...';
+}
 
-  const avatarHtml = imgSrc
-    ? '<img class="user-avatar" src="' + imgSrc + '" alt="' + name + '">'
-    : '<div class="user-avatar-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>';
+// Pick best image: prefer ~300px (index 1), fallback to 0 or 2
+function getBestImage(images) {
+  if (!images || images.length === 0) return '';
+  if (images.length >= 2) return images[1].url; // 300px
+  return images[0].url;
+}
 
-  document.getElementById('user-area').innerHTML = '<div class="user-profile">' + avatarHtml + '<div class="user-name">' + name + '<span>' + (profile.email || 'Spotify') + '</span></div></div>';
-  document.getElementById('logout-area').innerHTML = '<button class="logout-btn" onclick="logoutSpotify()">Logout</button>';
+// Handle broken images â replace with styled fallback
+function handleImgError(img) {
+  const name = img.alt || '';
+  const wrap = img.parentElement;
+  img.style.display = 'none';
+  const fallback = document.createElement('div');
+  fallback.className = 'img-placeholder';
+  fallback.textContent = name;
+  wrap.insertBefore(fallback, img);
+}
+
+async function fetchSavedAlbums(token) {
+  return fetchAllPages(
+    'https://api.spotify.com/v1/me/albums?limit=50',
+    token,
+    data => data.items.map(item => {
+      const a = item.album;
+      const artistGenres = a.artists.map(ar => ar.id);
+      return {
+        name: a.name,
+        artist: a.artists.map(ar => ar.name).join(', '),
+        img: getBestImage(a.images),
+        url: a.external_urls.spotify,
+        artistIds: a.artists.map(ar => ar.id),
+        genres: a.genres || []
+      };
+    })
+  );
+}
+
+async function fetchLikedSongs(token) {
+  return fetchAllPages(
+    'https://api.spotify.com/v1/me/tracks?limit=50',
+    token,
+    data => data.items.map(item => {
+      const t = item.track;
+      return {
+        name: t.name,
+        artist: t.artists.map(ar => ar.name).join(', '),
+        img: getBestImage(t.album ? t.album.images : null),
+        url: t.external_urls.spotify,
+        artistIds: t.artists.map(ar => ar.id),
+        genres: []
+      };
+    }),
+    150
+  );
+}
+
+async function fetchFollowedArtists(token) {
+  let items = [];
+  let url = 'https://api.spotify.com/v1/me/following?type=artist&limit=50';
+  while (url && items.length < 200) {
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) break;
+    const data = await res.json();
+    const artists = data.artists.items.map(a => ({
+      name: a.name,
+      artist: a.genres.slice(0, 3).join(', ') || 'Artist',
+      img: getBestImage(a.images),
+      url: a.external_urls.spotify,
+      artistIds: [a.id],
+      genres: a.genres || []
+    }));
+    items = items.concat(artists);
+    url = data.artists.cursors && data.artists.cursors.after
+      ? `https://api.spotify.com/v1/me/following?type=artist&limit=50&after=${data.artists.cursors.after}`
+      : null;
+    updateLoadingProgress(items.length);
+  }
+  return items;
+}
+
+// Enrich items with artist genres (for albums/tracks whose genres come from artists)
+async function enrichWithArtistGenres(items, token) {
+  // Collect unique artist IDs
+  const allIds = new Set();
+  items.forEach(item => {
+    if (item.artistIds) item.artistIds.forEach(id => allIds.add(id));
+  });
+  const uniqueIds = [...allIds];
+
+  // Fetch artists in batches of 50
+  const artistGenreMap = {};
+  for (let i = 0; i < uniqueIds.length; i += 50) {
+    const batch = uniqueIds.slice(i, i + 50);
+    try {
+      const res = await fetch('https://api.spotify.com/v1/artists?ids=' + batch.join(','), {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        data.artists.forEach(a => {
+          if (a) artistGenreMap[a.id] = a.genres || [];
+        });
+      }
+    } catch(e) { /* continue */ }
+  }
+
+  // Merge genres into items
+  items.forEach(item => {
+    if (item.artistIds) {
+      const merged = new Set(item.genres || []);
+      item.artistIds.forEach(id => {
+        if (artistGenreMap[id]) artistGenreMap[id].forEach(g => merged.add(g));
+      });
+      item.genres = [...merged];
+    }
+  });
+  return items;
+}
+
+// =============================================
+// STATE
+// =============================================
+let currentProfile = null;
+let currentToken = null;
+let currentType = null;
+let moodboardData = {}; // { moodId: [items] }
+
+// =============================================
+// MOODBOARD GENERATION
+// =============================================
+async function generateMoodboard(type) {
+  currentType = type;
+  showLoading(true, 'Fetching your ' + (type === 'tracks' ? 'liked songs' : type) + '...');
+
+  let items = [];
+  try {
+    if (type === 'albums') {
+      items = await fetchSavedAlbums(currentToken);
+    } else if (type === 'tracks') {
+      items = await fetchLikedSongs(currentToken);
+    } else if (type === 'artists') {
+      items = await fetchFollowedArtists(currentToken);
+    }
+
+    if (items.length === 0) {
+      showLoading(false);
+      alert('No ' + type + ' found in your Spotify library. Try a different category!');
+      return;
+    }
+
+    // Enrich with artist genres for better categorization
+    showLoadingText('Analyzing genres...');
+    if (type !== 'artists') {
+      items = await enrichWithArtistGenres(items, currentToken);
+    }
+
+    // Categorize into moods
+    showLoadingText('Sorting by mood...');
+    moodboardData = {};
+    MOOD_CONFIG.forEach(m => moodboardData[m.id] = []);
+    items.forEach(item => {
+      const mood = categorizByGenres(item.genres);
+      moodboardData[mood].push(item);
+    });
+
+    // Render
+    showLoading(false);
+    renderMoodboard(type, items.length);
+  } catch(e) {
+    showLoading(false);
+    console.error(e);
+    alert('Something went wrong fetching your data. Please try again.');
+  }
+}
+
+function showLoading(show, text) {
+  const el = document.getElementById('loading');
+  if (show) {
+    el.classList.remove('hidden');
+    if (text) document.getElementById('loading-text').textContent = text;
+    document.getElementById('loading-progress').textContent = '';
+  } else {
+    el.classList.add('hidden');
+  }
+}
+
+function showLoadingText(text) {
+  document.getElementById('loading-text').textContent = text;
+}
+
+// =============================================
+// RENDER MOODBOARD
+// =============================================
+function renderMoodboard(type, totalItems) {
+  document.getElementById('type-selector').style.display = 'none';
+  document.getElementById('landing-page').style.display = 'none';
+  const view = document.getElementById('moodboard-view');
+  view.style.display = 'block';
+
+  // Title
+  const typeLabels = { albums: 'Albums', tracks: 'Liked Songs', artists: 'Artists' };
+  document.getElementById('moodboard-title').textContent = (currentProfile ? currentProfile.display_name + "'s " : 'My ') + typeLabels[type] + ' by Mood';
+  document.getElementById('hero-subtitle').textContent = totalItems + ' ' + typeLabels[type].toLowerCase() + ', organized by vibe';
+
+  // Stats
+  const activeMoods = MOOD_CONFIG.filter(m => moodboardData[m.id].length > 0).length;
+  document.getElementById('stats-row').innerHTML =
+    '<span>' + totalItems + ' ' + typeLabels[type] + '</span>' +
+    '<span>' + activeMoods + ' Moods</span>' +
+    '<span>Genre-Sorted</span>';
+
+  // User area
+  if (currentProfile) {
+    const imgSrc = currentProfile.images && currentProfile.images.length > 0 ? currentProfile.images[0].url : '';
+    const name = currentProfile.display_name || currentProfile.id;
+    const avatarHtml = imgSrc
+      ? '<img class="user-avatar" src="' + imgSrc + '" alt="' + name + '">'
+      : '<div class="user-avatar-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>';
+    document.getElementById('user-area').innerHTML = '<div class="user-profile">' + avatarHtml + '<div class="user-name">' + name + '<span>' + (currentProfile.email || 'Spotify') + '</span></div></div>';
+  }
+
+  // Mood cards
+  const cardsEl = document.getElementById('mood-cards');
+  const sectionsEl = document.getElementById('sections-container');
+  cardsEl.innerHTML = '';
+  sectionsEl.innerHTML = '';
+
+  MOOD_CONFIG.forEach(mood => {
+    const items = moodboardData[mood.id];
+    const isEmpty = items.length === 0;
+
+    // Card
+    const card = document.createElement('div');
+    card.className = 'mood-card' + (isEmpty ? ' empty' : '');
+    card.setAttribute('data-mood', mood.id);
+
+    let previewHtml = '';
+    items.slice(0, 5).forEach(item => {
+      if (item.img) previewHtml += '<img src="' + item.img + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+    });
+
+    card.innerHTML =
+      '<h2>' + mood.emoji + ' ' + mood.label + '</h2>' +
+      '<div class="mood-meta">' + mood.meta + '</div>' +
+      '<div class="album-count">' + items.length + ' ' + typeLabels[type].toLowerCase() + '</div>' +
+      (previewHtml ? '<div class="preview-row">' + previewHtml + '</div>' : '') +
+      '<div class="chevron">â¼</div>';
+
+    if (!isEmpty) {
+      card.onclick = () => toggleSection(mood.id);
+    }
+    cardsEl.appendChild(card);
+
+    // Section
+    const section = document.createElement('div');
+    section.className = 'album-section';
+    section.id = 'section-' + mood.id;
+
+    let gridHtml = '';
+    items.forEach(item => {
+      const escapedName = item.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const imgHtml = item.img
+        ? '<img src="' + item.img + '" alt="' + escapedName + '" loading="lazy" onerror="handleImgError(this)">'
+        : '<div class="img-placeholder">' + item.name + '</div>';
+      gridHtml +=
+        '<a class="album-card" href="' + item.url + '" target="_blank" rel="noopener">' +
+          '<div class="img-wrap">' + imgHtml +
+            '<div class="play-badge"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>' +
+          '</div>' +
+          '<div class="album-name">' + item.name + '</div>' +
+          '<div class="album-artist">' + item.artist + '</div>' +
+        '</a>';
+    });
+
+    section.innerHTML =
+      '<div class="album-section-inner">' +
+        '<div class="section-header">' +
+          '<h3>' + mood.emoji + ' ' + mood.label + ' (' + items.length + ')</h3>' +
+          '<button class="close-btn" onclick="toggleSection(\'' + mood.id + '\')">Close</button>' +
+        '</div>' +
+        '<div class="album-grid">' + gridHtml + '</div>' +
+      '</div>';
+    sectionsEl.appendChild(section);
+  });
+}
+
+const typeLabels = { albums: 'Albums', tracks: 'Liked Songs', artists: 'Artists' };
+
+let openSection = null;
+function toggleSection(moodId) {
+  const cards = document.querySelectorAll('.mood-card');
+  cards.forEach(c => c.classList.remove('active'));
+
+  if (openSection === moodId) {
+    document.getElementById('section-' + moodId).classList.remove('open');
+    openSection = null;
+    return;
+  }
+
+  // Close previous
+  if (openSection) {
+    document.getElementById('section-' + openSection).classList.remove('open');
+  }
+
+  // Open new
+  const card = document.querySelector('.mood-card[data-mood="' + moodId + '"]');
+  if (card) card.classList.add('active');
+  const section = document.getElementById('section-' + moodId);
+  section.classList.add('open');
+  openSection = moodId;
+
+  // Scroll to section
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function copyShareLink() {
+  const url = window.location.origin + window.location.pathname;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.share-btn');
+    const txt = document.getElementById('share-text');
+    btn.classList.add('copied');
+    txt.textContent = 'Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); txt.textContent = 'Copy Link'; }, 2000);
+  });
+}
+
+function backToSelector() {
+  document.getElementById('moodboard-view').style.display = 'none';
+  document.getElementById('type-selector').style.display = 'block';
+  openSection = null;
 }
 
 function logoutSpotify() {
   localStorage.removeItem('spotify_token');
-  window.location.hash = '';
-  renderLoginButton();
-  document.getElementById('logout-area').innerHTML = '';
-  document.getElementById('hero-subtitle').textContent = '140 albums, organized by vibe';
+  localStorage.removeItem('code_verifier');
+  currentToken = null;
+  currentProfile = null;
+  document.getElementById('moodboard-view').style.display = 'none';
+  document.getElementById('type-selector').style.display = 'none';
+  document.getElementById('landing-page').style.display = 'flex';
 }
 
-// On page load: check for code or token
+// =============================================
+// PREFETCH COUNTS (for type selector badges)
+// =============================================
+async function prefetchCounts(token) {
+  // Quick fetch just first page to get totals
+  try {
+    const [albumsRes, tracksRes, artistsRes] = await Promise.all([
+      fetch('https://api.spotify.com/v1/me/albums?limit=1', { headers: { 'Authorization': 'Bearer ' + token } }),
+      fetch('https://api.spotify.com/v1/me/tracks?limit=1', { headers: { 'Authorization': 'Bearer ' + token } }),
+      fetch('https://api.spotify.com/v1/me/following?type=artist&limit=1', { headers: { 'Authorization': 'Bearer ' + token } })
+    ]);
+    if (albumsRes.ok) {
+      const d = await albumsRes.json();
+      document.getElementById('albums-count').textContent = (d.total || 0) + ' albums saved';
+    }
+    if (tracksRes.ok) {
+      const d = await tracksRes.json();
+      document.getElementById('tracks-count').textContent = (d.total || 0) + ' songs liked';
+    }
+    if (artistsRes.ok) {
+      const d = await artistsRes.json();
+      document.getElementById('artists-count').textContent = (d.artists.total || 0) + ' artists followed';
+    }
+  } catch(e) { console.log('Prefetch counts error:', e); }
+}
+
+// =============================================
+// INIT
+// =============================================
 (async function initAuth() {
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
   let token = null;
 
   if (code) {
+    showLoading(true, 'Connecting to Spotify...');
     token = await exchangeCodeForToken(code);
     if (token) {
       localStorage.setItem('spotify_token', token);
@@ -209,96 +810,26 @@ function logoutSpotify() {
   }
 
   if (token) {
+    showLoading(true, 'Loading your profile...');
     const profile = await fetchSpotifyProfile(token);
     if (profile) {
-      renderUserProfile(profile);
+      currentToken = token;
+      currentProfile = profile;
+      showLoading(false);
+
+      // Show type selector
+      document.getElementById('landing-page').style.display = 'none';
+      document.getElementById('type-selector').style.display = 'block';
+      document.getElementById('type-greeting').textContent = 'Hey ' + (profile.display_name || 'there') + '! What do you want to organize by mood?';
+
+      // Prefetch counts
+      prefetchCounts(token);
     } else {
-      renderLoginButton();
+      showLoading(false);
+      // Token expired, show landing
     }
-  } else {
-    renderLoginButton();
   }
 })();
-
-// ---- Albums Data ----
-const albums = [{"n":"SABLE, fABLE","a":"Bon Iver","img":"https://i.scdn.co/image/ab67616d00001e0230d93b9cce660d4f56770efb","url":"https://open.spotify.com/album/3L3UjpXtom6T0Plt1j6l1T"},{"n":"VOLUMES: ONE (SELECTIONS FROM MUSIC CONCERTS 2019-2023 BON IVER 6 PIECE BAND)","a":"Bon Iver","img":"https://i.scdn.co/image/ab67616d00001e028a0df30152364ff0767ac58c","url":"https://open.spotify.com/album/2tV8MeptqoxJcuwQbh6Khr"},{"n":"Distracted","a":"Thundercat","img":"https://i.scdn.co/image/ab67616d00001e025d6505356d39c9ec421d489b","url":"https://open.spotify.com/album/4DkVTJfU9qyNWKbjLoTENL"},{"n":"Crosby, Stills & Nash","a":"Crosby, Stills & Nash","img":"https://i.scdn.co/image/ab67616d00001e02a32339b8818323380682a889","url":"https://open.spotify.com/album/6vUWpE8qciYHOhf7mgaGny"},{"n":"הכבש השישה עשר","a":"Yehonatan Geffen","img":"https://i.scdn.co/image/ab67616d00001e023fcf8295828d6b7152be0b33","url":"https://open.spotify.com/album/1W3rJ4GGmcx2649VTgrYMz"},{"n":"The Mountain","a":"Gorillaz","img":"https://i.scdn.co/image/ab67616d00001e02637090b447f83e177b150074","url":"https://open.spotify.com/album/0grejBUQoBqauwRSMFGiLH"},{"n":"AIR SENEGAL","a":"Ben Aylon","img":"https://i.scdn.co/image/ab67616d00001e024fc29c6c733328894d0c3597","url":"https://open.spotify.com/album/2H1yPCyLNB40LjYq85t4YU"},{"n":"Against The Dying Of The Light","a":"José González","img":"https://i.scdn.co/image/ab67616d00001e0270a59fae0e676060e9e10e15","url":"https://open.spotify.com/album/6uRk7Sh5V5HQzHlBw2PXGQ"},{"n":"Cityfolk","a":"Son Little","img":"https://i.scdn.co/image/ab67616d00001e0207c7f31ad0eab2e20d52ee13","url":"https://open.spotify.com/album/2Cz4IHoAJyaYn3W1dLG9zv"},{"n":"1 (Remastered)","a":"The Beatles","img":"https://i.scdn.co/image/ab67616d00001e0256b83027b5bb3e19a7195a42","url":"https://open.spotify.com/album/7vEJAtP3KgKSpOHVgwm3Eh"},{"n":"Are You Shpongled?","a":"Shpongle","img":"https://i.scdn.co/image/ab67616d00001e0259cdc2228e49e7e78d33e590","url":"https://open.spotify.com/album/3xXkFOIbKCEBNjHMbHekq7"},{"n":"Transmissions","a":"Juno Reactor","img":"https://i.scdn.co/image/ab67616d00001e027dd61ea53a33c8acc96df860","url":"https://open.spotify.com/album/4cRHKjbRczp2JV3hK5fZ6U"},{"n":"Codex VI","a":"Shpongle","img":"https://i.scdn.co/image/ab67616d00001e021b5b9d876a4e98e47186af8d","url":"https://open.spotify.com/album/4jmjkpXFJaStTxZKBNc26N"},{"n":"Le pas du chat noir","a":"Anouar Brahem","img":"https://i.scdn.co/image/ab67616d00001e0237b8f1ed6e8e8b3c27d25bc6","url":"https://open.spotify.com/album/69sZ9AqfhqnirRMLFTtxRJ"},{"n":"Sol","a":"Dekel","img":"https://i.scdn.co/image/ab67616d00001e0253a4fdcac31a4a07de77d4da","url":"https://open.spotify.com/album/6Jyih8Ku3RjGqe2DExaUgv"},{"n":"Trying Times","a":"James Blake","img":"https://i.scdn.co/image/ab67616d00001e02838e84be0d4a22bffcab1ac0","url":"https://open.spotify.com/album/0g7T8gMnqOB3pJzKfmjW4t"},{"n":"Submarine - Original Songs From The Film By Alex Turner","a":"Alex Turner","img":"https://i.scdn.co/image/ab67616d00001e0259b2bf7bfb89e329c8602fb8","url":"https://open.spotify.com/album/1FGKM4SNGY5gDCEBR21bbe"},{"n":"Innervisions","a":"Stevie Wonder","img":"https://i.scdn.co/image/ab67616d00001e02d5c7f4b7cde96a5e69fd8a59","url":"https://open.spotify.com/album/2iBk6MOa1MiHIjAeSTVu7f"},{"n":"Vulture Prince","a":"Arooj Aftab","img":"https://i.scdn.co/image/ab67616d00001e022ff963325f4e6b72b70a6bd4","url":"https://open.spotify.com/album/2FoyIoOoFMoNJH01z1nOBp"},{"n":"Ladies of the Canyon","a":"Joni Mitchell","img":"https://i.scdn.co/image/ab67616d00001e02ddd1dfdb36ffb34e5a891ec0","url":"https://open.spotify.com/album/5gVBbCEavjcKfasgJDHBV7"},{"n":"If I Could Only Remember My Name","a":"David Crosby","img":"https://i.scdn.co/image/ab67616d00001e027c83e7ab184cdebc5fdb20f4","url":"https://open.spotify.com/album/3HEsEFjcTXMsm2VQ41uOPU"},{"n":"A Hum Of Maybe","a":"Apparat","img":"https://i.scdn.co/image/ab67616d00001e0207614a3d3b97ee7f3f66e2f7","url":"https://open.spotify.com/album/4iVCXMUV5VaPAy0paqWcuC"},{"n":"Psychedelica Melodica","a":"Cosmosis","img":"https://i.scdn.co/image/ab67616d00001e02209b86b221744f029a8dc386","url":"https://open.spotify.com/album/7qcgct1rUMXKPWsh9Wg8dG"},{"n":"Twisted","a":"Hallucinogen","img":"https://i.scdn.co/image/ab67616d00001e02e983284c84c1aa115de7d53e","url":"https://open.spotify.com/album/5xsMPrI84sq3fJizppXmsm"},{"n":"Coming From Reality","a":"Rodríguez","img":"https://i.scdn.co/image/ab67616d00001e0286146e2f7fc9e43db86dc66f","url":"https://open.spotify.com/album/2X0L9mwLuMqAK8rf965Vmi"},{"n":"Brothers In Arms (Remastered 1996)","a":"Dire Straits","img":"https://i.scdn.co/image/ab67616d00001e0258c4e9c84ece7d31f51636f3","url":"https://open.spotify.com/album/6Pz06FAaeym0JSqVqIkN56"},{"n":"רוצי שמוליק","a":"Ariel Zilber","img":"https://i.scdn.co/image/ab67616d00001e0260cd6c20d4d9374b16680d2f","url":"https://open.spotify.com/album/5ne4DS3ViiN4zGyU6yNKVf"},{"n":"Creative Acts","a":"Gorovich","img":"https://i.scdn.co/image/ab67616d00001e0286af11c26aaf121e56940074","url":"https://open.spotify.com/album/3KuxJzRJjIxuPqI9GEGXq8"},{"n":"New Light","a":"Gidge","img":"https://i.scdn.co/image/ab67616d00001e02c9ea2ab8d9a8f5c0aa07fd83","url":"https://open.spotify.com/album/5F3KXQF0E7VI0Yvt6FFB2x"},{"n":"IGOR","a":"Tyler, The Creator","img":"https://i.scdn.co/image/ab67616d00001e027005885df706891a3c182a57","url":"https://open.spotify.com/album/5zi7WsKlIiUXv09tbGLKsE"},{"n":"A Bridge To Far","a":"Midlake","img":"https://i.scdn.co/image/ab67616d00001e02e94d15a9bb2e2eba8f43e3b7","url":"https://open.spotify.com/album/3CfTSiHlnFjqUvTYm4sdGh"},{"n":"Head Hunters","a":"Herbie Hancock","img":"https://i.scdn.co/image/ab67616d00001e020c11be7d43aaef75a7c8bc38","url":"https://open.spotify.com/album/5fmIolILp5NATNYiRPjhzA"},{"n":"Black Sands","a":"Bonobo","img":"https://i.scdn.co/image/ab67616d00001e02e40a48e5e3e9e1d5b3c0a8d0","url":"https://open.spotify.com/album/0yNiCBMDHCnPz9J4aB11H2"},{"n":"Angus & Julia Stone (Deluxe)","a":"Angus & Julia Stone","img":"https://i.scdn.co/image/ab67616d00001e02cc94fb4340e8b08bd87f8e55","url":"https://open.spotify.com/album/3drJbG0ECf4aeEQFVDhHAL"},{"n":"Songs Carried To Me By The Wind","a":"Orka","img":"https://i.scdn.co/image/ab67616d00001e02acf5d38ed32d2f15c9840b26","url":"https://open.spotify.com/album/4DlhXjmqqz3GQi5pMvuuiF"},{"n":"Deja Vu","a":"Crosby, Stills, Nash & Young","img":"https://i.scdn.co/image/ab67616d00001e02a6f4c2e36b1b30682940e71e","url":"https://open.spotify.com/album/5lnQLEkzU1iFEbDgLfnz3C"},{"n":"שירי חג ומועד ונופל (Remastered)","a":"Meir Ariel","img":"https://i.scdn.co/image/ab67616d00001e02abf5ef8b0c63d4e70f3f5c6f","url":"https://open.spotify.com/album/4S8OGxX0sNR7VPMmqzr9sI"},{"n":"Can't Buy A Thrill","a":"Steely Dan","img":"https://i.scdn.co/image/ab67616d00001e02fefe6b0c547af930ee77d34a","url":"https://open.spotify.com/album/0aWMVrJyFIbVDwgte5MjJu"},{"n":"Headcleaner","a":"Atmos","img":"https://i.scdn.co/image/ab67616d00001e02f0e3c3b97f3b2c8e8e5e4e3c","url":"https://open.spotify.com/album/1kDBLAXV9bFJ7OGPhS1c3O"},{"n":"Rome","a":"Danger Mouse, Daniele Luppi","img":"https://i.scdn.co/image/ab67616d00001e02e2a5a8c5b4ee18c0e990be0e","url":"https://open.spotify.com/album/4aNPUvviFqrIosQlUKqKLt"},{"n":"Highway 61 Revisited","a":"Bob Dylan","img":"https://i.scdn.co/image/ab67616d00001e0241720ef0ae31e10d39e43ca2","url":"https://open.spotify.com/album/6YabPKtZAjxwyWbuO9p4ZD"},{"n":"GPS","a":"Shafrir","img":"https://i.scdn.co/image/ab67616d00001e02bf3e23be41958ae02c73d8c1","url":"https://open.spotify.com/album/0kz3FRaKfQ4P7EKpxWklsK"},{"n":"Stankonia (25th Anniversary)","a":"Outkast","img":"https://i.scdn.co/image/ab67616d00001e0276734f8b1e9ded5f3c78db9c","url":"https://open.spotify.com/album/1UQB0FkJajHPqHQh8WHb5Q"},{"n":"Chet Baker Sings","a":"Chet Baker","img":"https://i.scdn.co/image/ab67616d00001e02753a720a9845b697d8a120f6","url":"https://open.spotify.com/album/0E2PgtXRUHCslZ7gRselUq"},{"n":"Come Around and Love Me","a":"Jalen Ngonda","img":"https://i.scdn.co/image/ab67616d00001e0259dfc12b9bdf5b0803fa3f87","url":"https://open.spotify.com/album/0F6dDG7eTbx9m4SbWz1MhP"},{"n":"Out Of Season","a":"Beth Gibbons, Rustin Man","img":"https://i.scdn.co/image/ab67616d00001e0251f8d86729a62a35e2792bbf","url":"https://open.spotify.com/album/6nTOCPzj8JiohYlZxW5Zl1"},{"n":"Baduizm","a":"Erykah Badu","img":"https://i.scdn.co/image/ab67616d00001e02b5e18a80757ba2f787213d21","url":"https://open.spotify.com/album/3qr4pTBWEU1SVf01j6RAx3"},{"n":"Wish You Were Here 50","a":"Pink Floyd","img":"https://i.scdn.co/image/ab67616d00001e02c5bbb392e84b1ce4c29a709d","url":"https://open.spotify.com/album/3jlnaVYWc3QEqwCtdYCDS7"},{"n":"Footprints on Water","a":"Alon Aboutboul","img":"https://i.scdn.co/image/ab67616d00001e0200a3ffe6804dc28e892ed05c","url":"https://open.spotify.com/album/0UP6HGDaGOZTKdsnnYBXy1"},{"n":"In Rainbows","a":"Radiohead","img":"https://i.scdn.co/image/ab67616d00001e02de3c04b5fc750b68899b20a9","url":"https://open.spotify.com/album/5vkqYmiPBYLaalcmjujWxK"},{"n":"Anthology 4","a":"The Beatles","img":"https://i.scdn.co/image/ab67616d00001e02c97d3a5aa7aab3ae49f04ae5","url":"https://open.spotify.com/album/3O8JhPRkxGhLfZb3OFOmtg"},{"n":"EUSEXUA Afterglow","a":"FKA twigs","img":"https://i.scdn.co/image/ab67616d00001e02b32aa5e0d6af0e5b65d83f62","url":"https://open.spotify.com/album/5b2Q9Cfgee5N7pcINpCiXG"},{"n":"A Seat at the Table","a":"Solange","img":"https://i.scdn.co/image/ab67616d00001e020359f0e589e43e3a02c652c7","url":"https://open.spotify.com/album/4BZECU0oINq7lHhmA3Bakn"},{"n":"Got a Story to Tell","a":"Thee Sacred Souls","img":"https://i.scdn.co/image/ab67616d00001e02ac3bfc05ffa000c79aab72c1","url":"https://open.spotify.com/album/0jjqMfBVsBkWMm0kpvKryO"},{"n":"Thee Sacred Souls","a":"Thee Sacred Souls","img":"https://i.scdn.co/image/ab67616d00001e0260b4b4c7c7284c5d95117979","url":"https://open.spotify.com/album/4wIoj73xiBKS84YtSHvu8k"},{"n":"Shore","a":"Fleet Foxes","img":"https://i.scdn.co/image/ab67616d00001e02eab6bc67fd71c9fb69564839","url":"https://open.spotify.com/album/0lmjCPEcec2k6L7ysNIcd3"},{"n":"The Best of The Black President","a":"Fela Kuti","img":"https://i.scdn.co/image/ab67616d00001e022d12d1d6d7bdc4e503d2ccde","url":"https://open.spotify.com/album/5j6C1nRGmxN9I22N3FgPkx"},{"n":"A Light for Attracting Attention","a":"The Smile","img":"https://i.scdn.co/image/ab67616d00001e02f0b93a50c09a005ee3ebdb90","url":"https://open.spotify.com/album/3gBLDKpPk6FaHBwK3qwCBn"},{"n":"A Moon Shaped Pool","a":"Radiohead","img":"https://i.scdn.co/image/ab67616d00001e024ce8b4e42588bf18182a1ad2","url":"https://open.spotify.com/album/2ix8vWvvSp2Yo7rKMiWpkg"},{"n":"The Eraser","a":"Thom Yorke","img":"https://i.scdn.co/image/ab67616d00001e023b40244e85131e47ccb26c04","url":"https://open.spotify.com/album/3Lhm7zS5YPXfCuKcA0l3rg"},{"n":"In Rainbows","a":"Radiohead","img":"https://i.scdn.co/image/ab67616d00001e02de3c04b5fc750b68899b20a9","url":"https://open.spotify.com/album/7eyQXxuf2nGj9d2367Gi5f"},{"n":"Caviar","a":"Moscoman","img":"https://i.scdn.co/image/ab67616d00001e021bca8d0e5a87d1fc7e95a4f6","url":"https://open.spotify.com/album/7IuMPIGY3DE1aJ77Q96bU5"},{"n":"Getz/Gilberto (Expanded Edition)","a":"Stan Getz, João Gilberto","img":"https://i.scdn.co/image/ab67616d00001e02dd19f650c0d29633e45be9c7","url":"https://open.spotify.com/album/11iCoWmGnPVmHdZf1pKvDY"},{"n":"NOT TiGHT","a":"DOMi & JD BECK","img":"https://i.scdn.co/image/ab67616d00001e028d3b2e2a50fe4a4c27ed5b74","url":"https://open.spotify.com/album/7ycBaFJmCnGCGS1Y2Dkffx"},{"n":"The Virgin Suicides Redux","a":"Air","img":"https://i.scdn.co/image/ab67616d00001e02d9cbe7dba40c3832b05a7085","url":"https://open.spotify.com/album/4iX8v0Y43S3PnRqjI8bpXD"},{"n":"Mulatu Plays Mulatu","a":"Mulatu Astatke","img":"https://i.scdn.co/image/ab67616d00001e02c0e3c8fa87e7f6e9a75a8bdd","url":"https://open.spotify.com/album/4QcVFmh3GFc8vWb3zhmbFe"},{"n":"Stillness","a":"Ofir J.Rock","img":"https://i.scdn.co/image/ab67616d00001e025ce05ed2fffbe7c2fee76b93","url":"https://open.spotify.com/album/7gy3CxlzG1WIYz3VdFwHxf"},{"n":"הייתי פעם ילד","a":"Arik Einstein, Yoni Rechter","img":"https://i.scdn.co/image/ab67616d00001e02a93db5a9957b15529acf640f","url":"https://open.spotify.com/album/3O8HjhSjutddzUpXNbeQ7bEC"},{"n":"ילדודס","a":"Arik Einstein","img":"https://i.scdn.co/image/ab67616d00001e022bd93b383d43e3e725f702db","url":"https://open.spotify.com/album/0Yykrpn9So94PGofQoM4O4"},{"n":"Family Business","a":"Alon Aboutboul","img":"https://i.scdn.co/image/ab67616d00001e02186f8cc0f6ccd01752b723ac","url":"https://open.spotify.com/album/5kJFOC8lnLONIO4nGMsFcO"},{"n":"Looking for Love","a":"Margeeah","img":"https://i.scdn.co/image/ab67616d00001e02222f0ac789ef2c62aa85074f","url":"https://open.spotify.com/album/7rf8AlOxt8XkCEhnXWgxH0"},{"n":"All Things Must Pass (2014 Remaster)","a":"George Harrison","img":"https://i.scdn.co/image/ab67616d00001e026c6610322fc60bfb41481273","url":"https://open.spotify.com/album/7j7lsExGJtBHLgDYzjclwk"},{"n":"EVE","a":"Sheffy Oren Bach","img":"https://i.scdn.co/image/ab67616d00001e02cca5ef6f50ff2eb5b9d7a8d9","url":"https://open.spotify.com/album/0BrpkmGhSr3cLz3O0sUFNt"},{"n":"Bridge Over Troubled Water","a":"Simon & Garfunkel","img":"https://i.scdn.co/image/ab67616d00001e02de2a19f4a3a3a610429a1ac0","url":"https://open.spotify.com/album/0JmGHebQkkfXYL1FVJkryA"},{"n":"432","a":"Assaf Amdursky","img":"https://i.scdn.co/image/ab67616d00001e02c6d68badd97f63dd0f5e3e2a","url":"https://open.spotify.com/album/3qchZPB0L3GXuILGLjeCuT"},{"n":"The Very Best of Peter, Paul and Mary","a":"Peter, Paul and Mary","img":"https://i.scdn.co/image/ab67616d00001e027c51d6a86f19ec0d0a4a0300","url":"https://open.spotify.com/album/3AxrpanJrCQIvIaTTb6VgL"},{"n":"A LA SALA","a":"Khruangbin","img":"https://i.scdn.co/image/ab67616d00001e02f62dc92e6bae81d7ecad8758","url":"https://open.spotify.com/album/1Ll2LMQB6I9IRKsm2ayHEH"},{"n":"Bop Till You Drop","a":"Ry Cooder","img":"https://i.scdn.co/image/ab67616d00001e022e5b5e43f8de7b9d1e64aba7","url":"https://open.spotify.com/album/1Z95HVVS9FlUc26c3qVIWY"},{"n":"Still Crazy After All These Years","a":"Paul Simon","img":"https://i.scdn.co/image/ab67616d00001e02614f8cd938c147e648b4f6c7","url":"https://open.spotify.com/album/5Y2UB2PjbFJkyYHaU6BBUQ"},{"n":"As Earth to Sky","a":"Merkaba","img":"https://i.scdn.co/image/ab67616d00001e021d3fdc964d28db9b8c6c7b08","url":"https://open.spotify.com/album/1E4g34FBCE5fG3Z4k7Qi7D"},{"n":"מתי כספי","a":"Matti Caspi","img":"https://i.scdn.co/image/ab67616d00001e021f4e8d87d0be13a7b2f6d0e0","url":"https://open.spotify.com/album/0A9gJsqaPHABUbLCVeL3Wv"},{"n":"סיפורי פוגי","a":"Kaveret","img":"https://i.scdn.co/image/ab67616d00001e022d3d8e9f2d1e64bff3c78db9","url":"https://open.spotify.com/album/6QZsW1Z0MbX4h4gNvF3aXR"},{"n":"שירי חג ומועד ונופל","a":"Meir Ariel","img":"https://i.scdn.co/image/ab67616d00001e026d51d80e8d0c2cd5e37bb5c1","url":"https://open.spotify.com/album/0TzL3PlXz5wG8JcD6ywJt2"},{"n":"Hasta El Cielo","a":"Khruangbin","img":"https://i.scdn.co/image/ab67616d00001e020cda14783dfb652e3b8bef51","url":"https://open.spotify.com/album/4PYY4IPtamryBMjk4TC7LL"},{"n":"Con Todo El Mundo","a":"Khruangbin","img":"https://i.scdn.co/image/ab67616d00001e022ee13b91d9e20373f741e41a","url":"https://open.spotify.com/album/42j41uUwuHZT3bnedFh0Uo"},{"n":"Sun Giant","a":"Fleet Foxes","img":"https://i.scdn.co/image/ab67616d00001e029edb6b22a77d3c83cab0abdf","url":"https://open.spotify.com/album/2CBfjDdstyhy9Gq3pcOjHx"},{"n":"Fleet Foxes","a":"Fleet Foxes","img":"https://i.scdn.co/image/ab67616d00001e02f46b9d202509a8f7927d5e4f","url":"https://open.spotify.com/album/7LKzVm90JnhNMPF6qX21fS"},{"n":"The Eraser","a":"Thom Yorke","img":"https://i.scdn.co/image/ab67616d00001e023b40244e85131e47ccb26c04","url":"https://open.spotify.com/album/3Lhm7zS5YPXfCuKcA0l3rg"},{"n":"Turn Blue","a":"The Black Keys","img":"https://i.scdn.co/image/ab67616d00001e025fd8276ecb4a8916bd6bae7a","url":"https://open.spotify.com/album/2uDtIcPeiVD09BjtmqeMr7"},{"n":"Bon Iver, Bon Iver","a":"Bon Iver","img":"https://i.scdn.co/image/ab67616d00001e024b6b1547455bbecb9f6bba64","url":"https://open.spotify.com/album/2LpfNj3vB5rOXfaawLcOBg"},{"n":"Sea Change","a":"Beck","img":"https://i.scdn.co/image/ab67616d00001e02e7fc5b50ff71f92809db9d79","url":"https://open.spotify.com/album/5ieP11rJQvuYz0Ov3k03cy"},{"n":"The Suburbs (Deluxe)","a":"Arcade Fire","img":"https://i.scdn.co/image/ab67616d00001e021d6b4b0418200b6324734062","url":"https://open.spotify.com/album/0gkUcpkyW2SXN49Yktkf6F"},{"n":"How I Got Over","a":"The Roots","img":"https://i.scdn.co/image/ab67616d00001e025f306aa63a7bb18e7bf9152b","url":"https://open.spotify.com/album/25sYZjutddzUpXNbeQ7bEC"},{"n":"Texas Moon","a":"Khruangbin, Leon Bridges","img":"https://i.scdn.co/image/ab67616d00001e0228e12bc569f20d9f8ebff84c","url":"https://open.spotify.com/album/2Xs9xSBhvyo8F6daRc1npu"},{"n":"The Universe Smiles Upon You","a":"Khruangbin","img":"https://i.scdn.co/image/ab67616d00001e02e08ee206ad63148105336a19","url":"https://open.spotify.com/album/7GhytR6ZMWetf1IG7Pl6lR"},{"n":"The Miseducation of Lauryn Hill","a":"Ms. Lauryn Hill","img":"https://i.scdn.co/image/ab67616d00001e02da23ba46f4bd891d5b8e4b3b","url":"https://open.spotify.com/album/1BZoqoh8Tppcatln5ZXyPa"},{"n":"Moon Safari","a":"Air","img":"https://i.scdn.co/image/ab67616d00001e028ce604bdd67afba0534ff4bd","url":"https://open.spotify.com/album/1jeMiSeSnNS0Oys375qegp"},{"n":"Texas Sun","a":"Khruangbin, Leon Bridges","img":"https://i.scdn.co/image/ab67616d00001e0217fd0e3cab4f6be85b82b5ed","url":"https://open.spotify.com/album/7FE0GDP6Be6kJnGMuPIqfC"},{"n":"La Comitiva","a":"Erlend Øye, La Comitiva","img":"https://i.scdn.co/image/ab67616d00001e0225b25634a0bdf68a6fbc4c33","url":"https://open.spotify.com/album/3p7CdJKhSaCW5KNjCvIFXY"},{"n":"Rhapsody In White (Reissue)","a":"The Love Unlimited Orchestra","img":"https://i.scdn.co/image/ab67616d00001e024a4cc7b5f3f65b6a4fd5e5e5","url":"https://open.spotify.com/album/2qPaHTfP1khNmB1x5iww3p"},{"n":"Dreams In Aspamia","a":"Kutiman","img":"https://i.scdn.co/image/ab67616d00001e029c8c92edc4b0de2e2c4fae3f","url":"https://open.spotify.com/album/4bBGRcRKkSJg7kx2N6b0sZ"},{"n":"Baltimore","a":"Nina Simone","img":"https://i.scdn.co/image/ab67616d00001e028e7e6bea51a3cf330a0167d7","url":"https://open.spotify.com/album/3rJDFZi0qOi1Q0SjbzPlJL"},{"n":"הנשמות הטהורות","a":"The Pure Souls","img":"https://i.scdn.co/image/ab67616d00001e02a3cb2ec2b2a2eed6e893b0aa","url":"https://open.spotify.com/album/2eZgVPEWNpshxM39q49PoZ"},{"n":"החלונות הגבוהים","a":"The High Windows","img":"https://i.scdn.co/image/ab67616d00001e025e3c19ea3f67e4d1f05fa22f","url":"https://open.spotify.com/album/5A2fEm8hOzJ7qJPjJEfqkw"},{"n":"Gaucho","a":"Steely Dan","img":"https://i.scdn.co/image/ab67616d00001e022c9a7b3c62f03a1c70e9a6c0","url":"https://open.spotify.com/album/0vNWcSP0h7RCutlaLFhYz1"},{"n":"One Bad Habit","a":"Michael Franks","img":"https://i.scdn.co/image/ab67616d00001e02a1f6400cec8186bd7f0dd5c3","url":"https://open.spotify.com/album/1vQr2DNLE5V0yD75FmLhfO"},{"n":"Can't Get Enough","a":"Barry White","img":"https://i.scdn.co/image/ab67616d00001e02cd0d2d1c8f86b11e3e2e40b6","url":"https://open.spotify.com/album/2SxBGhh1q8q6CaChXR2AeF"},{"n":"Breezin'","a":"George Benson","img":"https://i.scdn.co/image/ab67616d00001e024fb9cee4aab6bb5e14ed0bdf","url":"https://open.spotify.com/album/3nS1qbFjVIbfNPSwXSMErf"},{"n":"A Study of Losses","a":"Beirut","img":"https://i.scdn.co/image/ab67616d00001e02b3dd89c38f9ea2e3c7bc7e40","url":"https://open.spotify.com/album/05UgLDq13U8xCf4MxLXXO7"},{"n":"Nothing But a Title","a":"New Born","img":"https://i.scdn.co/image/ab67616d00001e0287da4e6b4e7f25a32bc5e5ab","url":"https://open.spotify.com/album/0vK41FjhKEoSYRNJkQ3nZZ"},{"n":"ליילי 2","a":"Leyli, Gal Toren, Guy Levy","img":"https://i.scdn.co/image/ab67616d00001e02d15f3a824c1ca1dd2f5eedac","url":"https://open.spotify.com/album/3FLYBcbZBEh9UDS1c2Tq3m"},{"n":"ליילי","a":"Leyli, Gal Toren, Guy Levy","img":"https://i.scdn.co/image/ab67616d00001e024edb3d3e95e5a84a1dfcb3bc","url":"https://open.spotify.com/album/6fpZzsdzfCMHjCWPMPP8G2"},{"n":"The Dream","a":"alt-J","img":"https://i.scdn.co/image/ab67616d00001e0295b1bbaa45a5f8a5175b78fd","url":"https://open.spotify.com/album/5JzI3LUwkR64lHsVVRbiKO"},{"n":"Here We Are! (feat. Eugene Pitt)","a":"The Jive Five","img":"https://i.scdn.co/image/ab67616d00001e0274a6858b9a2ba7e5b46f59a9","url":"https://open.spotify.com/album/0JLM2wYfYNzjcUjetmh8nZ"},{"n":"Live EP (Live Version)","a":"Yael Dagon","img":"https://i.scdn.co/image/ab67616d00001e029e4e8648d8627f7158dca33c","url":"https://open.spotify.com/album/6sKwiTZJzdi886JfOKNXum"},{"n":"Alligator Bites Never Heal (Extended)","a":"Doechii","img":"https://i.scdn.co/image/ab67616d00001e02ea29212b801087f18319c187","url":"https://open.spotify.com/album/5yPu6XkHu8DAGmV6YkXYZq"},{"n":"Our Endless Numbered Days (Deluxe Edition)","a":"Iron & Wine","img":"https://i.scdn.co/image/ab67616d00001e02031c73667e732e3e208a6328","url":"https://open.spotify.com/album/7mhRzDIqu0KCWQ2fvsBGLj"},{"n":"للراحة","a":"Tahta Menezes, Rabih Abou-Khalil, Omar Faruk Tekbilek","img":"https://i.scdn.co/image/ab67616d00001e02e5e1d7c9b9b6bb1c3e4f3f71","url":"https://open.spotify.com/album/1h3J0F8g3J8sD3x5zRWGJy"},{"n":"An Awesome Wave","a":"alt-J","img":"https://i.scdn.co/image/ab67616d00001e02c01187bc16f4e88ee60f60c2","url":"https://open.spotify.com/album/6k3AKVi4Rk8E3VZSp2K5MT"},{"n":"For Emma, Forever Ago","a":"Bon Iver","img":"https://i.scdn.co/image/ab67616d00001e02a3b1c41048e5a6239acdb3f3","url":"https://open.spotify.com/album/4bJCKmpKEtsm8JjKGsbeO2"},{"n":"Bar Mediterraneo","a":"Nu Genea","img":"https://i.scdn.co/image/ab67616d00001e027e9c71c0bb74daf32b8cce90","url":"https://open.spotify.com/album/4TLePYBz0NQq0m2UDqiKaM"},{"n":"The Black Album","a":"JAŸ-Z","img":"https://i.scdn.co/image/ab67616d00001e020db3b50bc68b5a9b82d89c3f","url":"https://open.spotify.com/album/4gOdfu1Fv3TdAPFMq6PxFn"},{"n":"The Blueprint (Explicit Version)","a":"JAŸ-Z","img":"https://i.scdn.co/image/ab67616d00001e02cd0c3a093bada06c7b4df53e","url":"https://open.spotify.com/album/66CfRJQBhJClxK1FXQW0JV"},{"n":"Rose in the Dark","a":"Cleo Sol","img":"https://i.scdn.co/image/ab67616d00001e024a4cc7b5f3f65b6a4fd5e5e5","url":"https://open.spotify.com/album/3YBXMvJBiGxNUVzRE7dVVJ"},{"n":"Armon & Roei Hermon","a":"Armon, Roei Hermon","img":"https://i.scdn.co/image/ab67616d00001e02f0b93a50c09a005ee3ebdb90","url":"https://open.spotify.com/album/1gT5jLlWuWLZCEaIYlgRmP"},{"n":"ארץ טרופית יפה","a":"Various Artists","img":"https://i.scdn.co/image/ab67616d00001e02d15f3a824c1ca1dd2f5eedac","url":"https://open.spotify.com/album/3z3oHNM3OP3nrMlU7x1rHv"},{"n":"Napoli Segreta Vol.2","a":"Various Artists","img":"https://i.scdn.co/image/ab67616d00001e021e17e81c6ad1e2d0f0dc4b2f","url":"https://open.spotify.com/album/5cPQRaMH6btqj2G2N3CmJQ"},{"n":"Mama's Gun","a":"Erykah Badu","img":"https://i.scdn.co/image/ab67616d00001e025e3c0ced3d3fb3f4ec2c4a3c","url":"https://open.spotify.com/album/7Jn14Jh1DiiFIUjRebVXvU"},{"n":"Ella and Louis","a":"Ella Fitzgerald, Louis Armstrong","img":"https://i.scdn.co/image/ab67616d00001e02c7c83d2d0cd0e3abe7bfbaee","url":"https://open.spotify.com/album/1j6ydoezrn7RZvpVrLTd4r"},{"n":"Um Violão em Primeiro Plano","a":"Rosinha De Valença","img":"https://i.scdn.co/image/ab67616d00001e02e9d55ff3d68cf65bbf5c4ef8","url":"https://open.spotify.com/album/30GxGWJFFPkVLLa4bZdN0m"},{"n":"Over Fields And Mountains","a":"Branko Mataja","img":"https://i.scdn.co/image/ab67616d00001e026c6610322fc60bfb41481273","url":"https://open.spotify.com/album/4THTJBCA8wLCJ6rV7oJwbc"},{"n":"Native Dancer","a":"Wayne Shorter","img":"https://i.scdn.co/image/ab67616d00001e02fdb52e4c4a52e42bcc29b484","url":"https://open.spotify.com/album/1eT9pEX9uIQsGdsfCDt1Fv"},{"n":"Assume Form","a":"James Blake","img":"https://i.scdn.co/image/ab67616d00001e0220e6a1e6ec7c8f7d8b9c6c38","url":"https://open.spotify.com/album/21xp7NdU1ajmO1CX0w2Egd"},{"n":"This Is All Yours","a":"alt-J","img":"https://i.scdn.co/image/ab67616d00001e0211b3df35e2e46d91f585afd9","url":"https://open.spotify.com/album/4oktVvRuO1In9B7Hz0xm0a"},{"n":"Built On Glass","a":"Chet Faker","img":"https://i.scdn.co/image/ab67616d00001e02adaa2007dffc30492c87bba4","url":"https://open.spotify.com/album/6DwdzG4UGYLxJ2p7bd483v"},{"n":"More Life","a":"Drake","img":"https://i.scdn.co/image/ab67616d00001e024f0fd9dad63977146e685700","url":"https://open.spotify.com/album/1lXY618HWkwYKJWBRYR4MK"},{"n":"\"Awaken, My Love!\"","a":"Childish Gambino","img":"https://i.scdn.co/image/ab67616d00001e020b97e56ffad7c6211aa848f8","url":"https://open.spotify.com/album/4xnq1L6P551Qcb9gBXNMK7"},{"n":"Here, My Dear","a":"Marvin Gaye","img":"https://i.scdn.co/image/ab67616d00001e02d9e83bbcf06d8d39f0adbb8e","url":"https://open.spotify.com/album/1iVf41qWHZsAk9DwY43WnV"},{"n":"Sun Giant","a":"Fleet Foxes","img":"https://i.scdn.co/image/ab67616d00001e029edb6b22a77d3c83cab0abdf","url":"https://open.spotify.com/album/2CBfjDdstyhy9Gq3pcOjHx"},{"n":"Helplessness Blues","a":"Fleet Foxes","img":"https://i.scdn.co/image/ab67616d00001e020df0a3f50ed403c16b26d6a1","url":"https://open.spotify.com/album/7KMPB3Jjm4FcFJCA2YV1Si"}];
-
-const moods = {"morning":[0,1,3,7,16,19,20,24,30,33,34,35,55,71,73,75,78,85,86,89,90,116,119,130,138,139],"weekend":[13,15,18,25,26,28,32,36,41,43,62,64,74,76,77,80,82,83,84,93,94,96,97,98,103,108,117,120,124,128,129,132,134],"hosting":[2,8,9,17,31,37,42,44,46,50,53,54,56,63,65,81,92,95,99,100,101,102,104,105,106,107,109,110,111,113,115,121,122,125,126,127,137],"fitness":[10,11,12,22,23,27,38,51,61,79],"latenight":[5,29,39,45,47,49,52,57,58,59,60,70,87,88,91,112,114,118,123,131,133,135,136],"focus":[6,14,21,40,48,66,69,72],"kids":[4,67,68]};
-
-const moodConfig = [
-  {id:'morning',label:'Morning',gradient:'linear-gradient(135deg,#FDB813,#F97316)',meta:'~60-100 BPM / Gentle acoustic, folk, warm starts'},
-  {id:'weekend',label:'Weekend Chill',gradient:'linear-gradient(135deg,#06B6D4,#3B82F6)',meta:'~70-110 BPM / Relaxed grooves, bossa nova, mellow'},
-  {id:'hosting',label:'Hosting & Party',gradient:'linear-gradient(135deg,#F43F5E,#EC4899)',meta:'~95-130 BPM / Funky, upbeat soul, crowd-pleasers'},
-  {id:'fitness',label:'Fitness',gradient:'linear-gradient(135deg,#10B981,#22D3EE)',meta:'~125-155+ BPM / Trance, techno, psytrance'},
-  {id:'latenight',label:'Late Night',gradient:'linear-gradient(135deg,#6366F1,#8B5CF6)',meta:'~60-120 BPM / Moody, introspective, atmospheric'},
-  {id:'focus',label:'Focus / Work',gradient:'linear-gradient(135deg,#A78BFA,#C084FC)',meta:'~80-120 BPM / Instrumental, ambient, steady'},
-  {id:'kids',label:'Kids',gradient:'linear-gradient(135deg,#FBBF24,#FB923C)',meta:"Children's favorites / Singalongs, stories, classics"}
-];
-
-const cardsContainer = document.getElementById('mood-cards');
-const sectionsContainer = document.getElementById('sections-container');
-
-moodConfig.forEach(cfg => {
-  const indices = moods[cfg.id] || [];
-  const previewImgs = indices.slice(0,5).map(i => albums[i] ? albums[i].img : '').filter(Boolean);
-
-  const card = document.createElement('div');
-  card.className = 'mood-card';
-  card.dataset.mood = cfg.id;
-  card.innerHTML = `
-    <div>
-      <h2>${cfg.label}</h2>
-      <div class="mood-meta">${cfg.meta}</div>
-      <div class="album-count">${indices.length} albums</div>
-    </div>
-    <div class="preview-row">${previewImgs.map(src => `<img src="${src}" alt="" loading="lazy" onerror="this.style.display='none'">`).join('')}</div>
-    <div class="chevron">v</div>
-  `;
-  cardsContainer.appendChild(card);
-
-  const section = document.createElement('div');
-  section.className = 'album-section';
-  section.id = 'section-' + cfg.id;
-  section.innerHTML = `<div class="album-section-inner">
-    <div class="section-header">
-      <h3>${cfg.label}</h3>
-      <button class="close-btn" data-mood="${cfg.id}">Close</button>
-    </div>
-    <div class="album-grid" id="grid-${cfg.id}"></div>
-  </div>`;
-  sectionsContainer.appendChild(section);
-
-  const grid = section.querySelector('.album-grid');
-  indices.forEach(i => {
-    const a = albums[i];
-    if (!a) return;
-    const el = document.createElement('a');
-    el.className = 'album-card';
-    el.href = a.url;
-    el.target = '_blank';
-    el.rel = 'noopener';
-    el.innerHTML = '<div class="img-wrap"><img src="'+a.img+'" alt="'+a.n.replace(/"/g,'&quot;')+'" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=img-placeholder>'+a.n.replace(/'/g,'').replace(/"/g,'').substring(0,30)+'</div>\'"><div class="play-badge"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div><div class="album-name">'+a.n+'</div><div class="album-artist">'+a.a+'</div>';
-    grid.appendChild(el);
-  });
-
-  card.addEventListener('click', () => {
-    const isOpen = section.classList.contains('open');
-    document.querySelectorAll('.album-section').forEach(s => s.classList.remove('open'));
-    document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
-    if (!isOpen) {
-      section.classList.add('open');
-      card.classList.add('active');
-      setTimeout(() => section.scrollIntoView({behavior:'smooth',block:'start'}), 100);
-    }
-  });
-
-  section.querySelector('.close-btn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    section.classList.remove('open');
-    card.classList.remove('active');
-    card.scrollIntoView({behavior:'smooth',block:'center'});
-  });
-});
 </script>
 </body>
 </html>
