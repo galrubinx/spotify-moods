@@ -511,22 +511,20 @@ async function enrichWithArtistGenres(items, token) {
   });
   const uniqueIds = [...allIds];
 
-  // Fetch artists in batches of 50
-  const artistGenreMap = {};
-  for (let i = 0; i < uniqueIds.length; i += 50) {
-    const batch = uniqueIds.slice(i, i + 50);
-    try {
-      const res = await fetch('https://api.spotify.com/v1/artists?ids=' + batch.join(','), {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        data.artists.forEach(a => {
-          if (a) artistGenreMap[a.id] = a.genres || [];
+      // Fetch artists individually in parallel batches of 10
+      // (batch /v1/artists?ids= endpoint returns 403 for dev-mode apps)
+      const artistGenreMap = {};
+      for (let i = 0; i < uniqueIds.length; i += 10) {
+        const batch = uniqueIds.slice(i, i + 10);
+        const results = await Promise.all(batch.map(id =>
+          fetch('https://api.spotify.com/v1/artists/' + id, {
+            headers: { 'Authorization': 'Bearer ' + token }
+          }).then(r => r.ok ? r.json() : null).catch(() => null)
+        ));
+        results.forEach(a => {
+          if (a && a.id) artistGenreMap[a.id] = a.genres || [];
         });
       }
-    } catch(e) { /* continue */ }
-  }
 
   // Merge genres into items
   items.forEach(item => {
