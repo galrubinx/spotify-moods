@@ -1008,7 +1008,7 @@ async function createPlaylistFromMood(moodId) {
       body: JSON.stringify({
         name: playlistName,
         description: playlistDesc,
-        public: false
+        public: true
       })
     });
 
@@ -1019,6 +1019,9 @@ async function createPlaylistFromMood(moodId) {
     }
 
     const playlist = await createRes.json();
+
+    console.log('[Playlist] Created playlist ID:', playlist.id, 'URL:', playlist.external_urls.spotify);
+    console.log('[Playlist] About to add', trackUris.length, 'tracks, first 3:', trackUris.slice(0,3));
 
     // 3. Add tracks in batches of 100
     let addedCount = 0;
