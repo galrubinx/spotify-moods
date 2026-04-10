@@ -93,6 +93,13 @@
   .section-header h3{font-size:1.2rem;font-weight:600}
   .close-btn{background:rgba(255,255,255,0.06);border:none;color:#aaa;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:.8rem;font-family:inherit;transition:all .2s}
   .close-btn:hover{background:rgba(255,255,255,0.12);color:#fff}
+  .create-playlist-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(0,114,245,0.15);border:1px solid rgba(0,114,245,0.3);color:#0072F5;padding:8px 18px;border-radius:20px;cursor:pointer;font-size:.8rem;font-weight:600;font-family:inherit;transition:all .25s}
+  .create-playlist-btn:hover{background:rgba(0,114,245,0.25);border-color:rgba(0,114,245,0.5);transform:scale(1.03)}
+  .create-playlist-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .create-playlist-btn svg{width:16px;height:16px}
+  .create-playlist-btn.success{background:rgba(30,215,96,0.15);border-color:rgba(30,215,96,0.4);color:#1ed760}
+  .create-playlist-btn.error{background:rgba(255,80,80,0.15);border-color:rgba(255,80,80,0.4);color:#ff5050}
+  .section-actions{display:flex;gap:8px;align-items:center}
 
   .album-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px}
   .album-card{text-decoration:none;color:inherit;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px;transition:all .25s;cursor:pointer;display:block}
@@ -257,7 +264,7 @@
 // =============================================
 const SPOTIFY_CLIENT_ID = '6327aba2bbaf4fbcba4ef47ded399b81';
 const REDIRECT_URI = window.location.origin + window.location.pathname;
-const SCOPES = 'user-read-private user-read-email user-library-read user-follow-read user-top-read';
+const SCOPES = 'user-read-private user-read-email user-library-read user-follow-read user-top-read playlist-modify-public playlist-modify-private';
 
 // =============================================
 // GENRE TO MOOD MAPPING ENGINE
@@ -845,11 +852,21 @@ function renderMoodboard(type, totalItems) {
         '</a>';
     });
 
+    const playlistBtnHtml = currentToken
+      ? '<button class="create-playlist-btn" id="playlist-btn-' + mood.id + '" onclick="createPlaylistFromMood(\'' + mood.id + '\')">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>' +
+          'Create Playlist' +
+        '</button>'
+      : '';
+
     section.innerHTML =
       '<div class="album-section-inner">' +
         '<div class="section-header">' +
           '<h3>' + mood.label + ' (' + items.length + ')</h3>' +
-          '<button class="close-btn" onclick="toggleSection(\'' + mood.id + '\')">Close</button>' +
+          '<div class="section-actions">' +
+            playlistBtnHtml +
+            '<button class="close-btn" onclick="toggleSection(\'' + mood.id + '\')">Close</button>' +
+          '</div>' +
         '</div>' +
         '<div class="album-grid">' + gridHtml + '</div>' +
       '</div>';
@@ -891,6 +908,134 @@ function toggleSection(moodId) {
 // Minimal inline implementation for URL-safe compression
 // =============================================
 const LZString = (function(){const f=String.fromCharCode,keyStrUriSafe="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";function _compress(uncompressed,bitsPerChar,getCharFromInt){if(uncompressed==null)return"";let i,value,context_dictionary={},context_dictionaryToCreate={},context_c="",context_wc="",context_w="",context_enlargeIn=2,context_dictSize=3,context_numBits=2,context_data=[],context_data_val=0,context_data_position=0;for(let ii=0;ii<uncompressed.length;ii++){context_c=uncompressed.charAt(ii);if(!Object.prototype.hasOwnProperty.call(context_dictionary,context_c)){context_dictionary[context_c]=context_dictSize++;context_dictionaryToCreate[context_c]=true}context_wc=context_w+context_c;if(Object.prototype.hasOwnProperty.call(context_dictionary,context_wc)){context_w=context_wc}else{if(Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)){if(context_w.charCodeAt(0)<256){for(i=0;i<context_numBits;i++){context_data_val=(context_data_val<<1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}}value=context_w.charCodeAt(0);for(i=0;i<8;i++){context_data_val=(context_data_val<<1)|(value&1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=value>>1}}else{value=1;for(i=0;i<context_numBits;i++){context_data_val=(context_data_val<<1)|value;if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=0}value=context_w.charCodeAt(0);for(i=0;i<16;i++){context_data_val=(context_data_val<<1)|(value&1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=value>>1}}context_enlargeIn--;if(context_enlargeIn==0){context_enlargeIn=Math.pow(2,context_numBits);context_numBits++}delete context_dictionaryToCreate[context_w]}else{value=context_dictionary[context_w];for(i=0;i<context_numBits;i++){context_data_val=(context_data_val<<1)|(value&1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=value>>1}}context_enlargeIn--;if(context_enlargeIn==0){context_enlargeIn=Math.pow(2,context_numBits);context_numBits++}context_dictionary[context_wc]=context_dictSize++;context_w=String(context_c)}}if(context_w!==""){if(Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)){if(context_w.charCodeAt(0)<256){for(i=0;i<context_numBits;i++){context_data_val=(context_data_val<<1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}}value=context_w.charCodeAt(0);for(i=0;i<8;i++){context_data_val=(context_data_val<<1)|(value&1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=value>>1}}else{value=1;for(i=0;i<context_numBits;i++){context_data_val=(context_data_val<<1)|value;if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=0}value=context_w.charCodeAt(0);for(i=0;i<16;i++){context_data_val=(context_data_val<<1)|(value&1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=value>>1}}context_enlargeIn--;if(context_enlargeIn==0){context_enlargeIn=Math.pow(2,context_numBits);context_numBits++}delete context_dictionaryToCreate[context_w]}else{value=context_dictionary[context_w];for(i=0;i<context_numBits;i++){context_data_val=(context_data_val<<1)|(value&1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=value>>1}}}value=2;for(i=0;i<context_numBits;i++){context_data_val=(context_data_val<<1)|(value&1);if(context_data_position==bitsPerChar-1){context_data_position=0;context_data.push(getCharFromInt(context_data_val));context_data_val=0}else{context_data_position++}value=value>>1}while(true){context_data_val=(context_data_val<<1);if(context_data_position==bitsPerChar-1){context_data.push(getCharFromInt(context_data_val));break}else context_data_position++}return context_data.join("")}function _decompress(length,resetValue,getNextValue){let dictionary=[],next,enlargeIn=4,dictSize=4,numBits=3,entry="",result=[],i,w,bits,resb,maxpower,power,c,data={val:getNextValue(0),position:resetValue,index:1};for(i=0;i<3;i++)dictionary[i]=i;bits=0;maxpower=Math.pow(2,2);power=1;while(power!=maxpower){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++)}bits|=(resb>0?1:0)*power;power<<=1}switch(next=bits){case 0:bits=0;maxpower=Math.pow(2,8);power=1;while(power!=maxpower){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++)}bits|=(resb>0?1:0)*power;power<<=1}c=f(bits);break;case 1:bits=0;maxpower=Math.pow(2,16);power=1;while(power!=maxpower){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++)}bits|=(resb>0?1:0)*power;power<<=1}c=f(bits);break;case 2:return""}dictionary[3]=c;w=c;result.push(c);while(true){if(data.index>length)return"";bits=0;maxpower=Math.pow(2,numBits);power=1;while(power!=maxpower){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++)}bits|=(resb>0?1:0)*power;power<<=1}switch(c=bits){case 0:bits=0;maxpower=Math.pow(2,8);power=1;while(power!=maxpower){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++)}bits|=(resb>0?1:0)*power;power<<=1}dictionary[dictSize++]=f(bits);c=dictSize-1;enlargeIn--;break;case 1:bits=0;maxpower=Math.pow(2,16);power=1;while(power!=maxpower){resb=data.val&data.position;data.position>>=1;if(data.position==0){data.position=resetValue;data.val=getNextValue(data.index++)}bits|=(resb>0?1:0)*power;power<<=1}dictionary[dictSize++]=f(bits);c=dictSize-1;enlargeIn--;break;case 2:return result.join("")}if(enlargeIn==0){enlargeIn=Math.pow(2,numBits);numBits++}if(dictionary[c]){entry=dictionary[c]}else{if(c===dictSize){entry=w+w.charAt(0)}else return null}result.push(entry);dictionary[dictSize++]=w+entry.charAt(0);enlargeIn--;if(enlargeIn==0){enlargeIn=Math.pow(2,numBits);numBits++}w=entry}};const baseReverseDic={};function getBaseValue(alphabet,character){if(!baseReverseDic[alphabet]){baseReverseDic[alphabet]={};for(let i=0;i<alphabet.length;i++)baseReverseDic[alphabet][alphabet.charAt(i)]=i}return baseReverseDic[alphabet][character]}return{compressToEncodedURIComponent:function(input){if(input==null)return"";return _compress(input,6,function(a){return keyStrUriSafe.charAt(a)})},decompressFromEncodedURIComponent:function(input){if(input==null)return"";if(input=="")return null;input=input.replace(/ /g,"+");return _decompress(input.length,32,function(index){return getBaseValue(keyStrUriSafe,input.charAt(index))})}}})();
+
+// =============================================
+// CREATE SPOTIFY PLAYLIST FROM MOOD
+// =============================================
+async function createPlaylistFromMood(moodId) {
+  const btn = document.getElementById('playlist-btn-' + moodId);
+  if (!btn || !currentToken || !currentProfile) return;
+
+  const moodConfig = MOOD_CONFIG.find(m => m.id === moodId);
+  const items = moodboardData[moodId];
+  if (!items || items.length === 0) return;
+
+  // UI: loading state
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg class="loading-spinner" style="width:14px;height:14px;border-width:2px;animation:spin .8s linear infinite;border:2px solid rgba(0,114,245,0.2);border-top-color:#0072F5;border-radius:50%" viewBox="0 0 1 1"></svg> Creating...';
+
+  try {
+    // 1. Collect track URIs based on content type
+    let trackUris = [];
+
+    if (currentType === 'tracks') {
+      trackUris = items
+        .filter(item => item.trackId)
+        .map(item => 'spotify:track:' + item.trackId);
+    } else if (currentType === 'albums') {
+      for (const item of items) {
+        if (item.url) {
+          const albumId = item.url.split('/album/')[1]?.split('?')[0];
+          if (albumId) {
+            try {
+              const res = await fetch('https://api.spotify.com/v1/albums/' + albumId + '/tracks?limit=50', {
+                headers: { 'Authorization': 'Bearer ' + currentToken }
+              });
+              if (res.ok) {
+                const data = await res.json();
+                data.items.forEach(t => trackUris.push('spotify:track:' + t.id));
+              }
+            } catch(e) { /* skip album */ }
+          }
+        }
+        if (trackUris.length >= 200) break;
+      }
+    } else if (currentType === 'artists') {
+      for (const item of items) {
+        if (item.artistIds && item.artistIds[0]) {
+          try {
+            const res = await fetch('https://api.spotify.com/v1/artists/' + item.artistIds[0] + '/top-tracks?market=US', {
+              headers: { 'Authorization': 'Bearer ' + currentToken }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              data.tracks.slice(0, 3).forEach(t => trackUris.push('spotify:track:' + t.id));
+            }
+          } catch(e) { /* skip artist */ }
+        }
+        if (trackUris.length >= 200) break;
+      }
+    }
+
+    trackUris = [...new Set(trackUris)].slice(0, 200);
+
+    if (trackUris.length === 0) {
+      throw new Error('No tracks found to add to playlist');
+    }
+
+    // 2. Create the playlist
+    const playlistName = moodConfig.label + ' \u2014 Moods by ' + (currentProfile.display_name || 'Gal');
+    const playlistDesc = moodConfig.meta + ' \u2022 Created with Moods by Gal';
+
+    const createRes = await fetch('https://api.spotify.com/v1/me/playlists', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + currentToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: playlistName,
+        description: playlistDesc,
+        public: false
+      })
+    });
+
+    if (!createRes.ok) {
+      const errText = await createRes.text();
+      console.error('Playlist creation failed:', createRes.status, errText);
+      throw new Error('Failed to create playlist');
+    }
+
+    const playlist = await createRes.json();
+
+    // 3. Add tracks in batches of 100
+    for (let i = 0; i < trackUris.length; i += 100) {
+      const batch = trackUris.slice(i, i + 100);
+      await fetch('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + currentToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ uris: batch })
+      });
+    }
+
+    // 4. Success UI
+    btn.className = 'create-playlist-btn success';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Playlist Created! (' + trackUris.length + ' tracks)';
+    btn.onclick = () => window.open(playlist.external_urls.spotify, '_blank');
+
+    setTimeout(() => {
+      btn.className = 'create-playlist-btn';
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+      btn.onclick = () => createPlaylistFromMood(moodId);
+    }, 8000);
+
+  } catch(e) {
+    console.error('Create playlist error:', e);
+    btn.className = 'create-playlist-btn error';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Failed \u2014 Try Again';
+    setTimeout(() => {
+      btn.className = 'create-playlist-btn';
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+      btn.onclick = () => createPlaylistFromMood(moodId);
+    }, 4000);
+  }
+}
 
 async function copyShareLink() {
   const btn = document.querySelector('.share-btn');
