@@ -941,6 +941,8 @@ async function createPlaylistFromMood(moodId) {
     // 1. Collect track URIs based on content type
     let trackUris = [];
 
+    console.log('[Playlist] Type:', currentType, 'Items:', items.length, 'Sample item keys:', Object.keys(items[0] || {}));
+
     if (currentType === 'tracks') {
       trackUris = items
         .filter(item => item.trackId)
@@ -949,6 +951,7 @@ async function createPlaylistFromMood(moodId) {
       for (const item of items) {
         if (item.url) {
           const albumId = item.url.split('/album/')[1]?.split('?')[0];
+          console.log('[Playlist] Album URL:', item.url, '-> ID:', albumId);
           if (albumId) {
             try {
               const res = await fetch('https://api.spotify.com/v1/albums/' + albumId + '/tracks?limit=50', {
@@ -956,10 +959,16 @@ async function createPlaylistFromMood(moodId) {
               });
               if (res.ok) {
                 const data = await res.json();
+                console.log('[Playlist] Album "' + item.name + '" has ' + data.items.length + ' tracks');
                 data.items.forEach(t => trackUris.push('spotify:track:' + t.id));
+              } else {
+                console.error('[Playlist] Album tracks fetch failed:', res.status, await res.text());
               }
-            } catch(e) { /* skip album */ }
+            } catch(e) { console.error('[Playlist] Album fetch error:', e); }
           }
+        } else if (item.trackId) {
+          // Fallback: use the first track ID saved during album fetch
+          trackUris.push('spotify:track:' + item.trackId);
         }
         if (trackUris.length >= 200) break;
       }
@@ -1012,9 +1021,10 @@ async function createPlaylistFromMood(moodId) {
     const playlist = await createRes.json();
 
     // 3. Add tracks in batches of 100
+    let addedCount = 0;
     for (let i = 0; i < trackUris.length; i += 100) {
       const batch = trackUris.slice(i, i + 100);
-      await fetch('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks', {
+      const addRes = await fetch('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + currentToken,
@@ -1022,11 +1032,17 @@ async function createPlaylistFromMood(moodId) {
         },
         body: JSON.stringify({ uris: batch })
       });
+      if (addRes.ok) {
+        addedCount += batch.length;
+      } else {
+        console.error('Failed to add tracks batch:', addRes.status, await addRes.text());
+      }
     }
+    console.log('[Playlist] Added ' + addedCount + '/' + trackUris.length + ' tracks');
 
     // 4. Success UI
     btn.className = 'create-playlist-btn success';
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Playlist Created! (' + trackUris.length + ' tracks)';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Playlist Created! (' + addedCount + ' tracks)';
     btn.onclick = () => window.open(playlist.external_urls.spotify, '_blank');
 
     setTimeout(() => {
