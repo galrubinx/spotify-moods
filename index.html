@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -128,6 +128,27 @@
   .cta-banner .cta-btn:hover{background:#1a8aff;transform:scale(1.04)}
   .cta-banner .cta-btn svg{width:20px;height:20px}
 
+  /* Toast notifications (replaces alert()) */
+  .toast-container{position:fixed;top:24px;right:24px;z-index:10000;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+  .toast{pointer-events:auto;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px 20px;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.6);display:flex;align-items:flex-start;gap:12px;animation:toastIn .3s ease;font-size:.85rem;line-height:1.5;color:#ccc}
+  .toast.toast-error{border-color:rgba(255,80,80,0.3);background:rgba(40,10,10,0.95)}
+  .toast.toast-error .toast-icon{color:#ff5050}
+  .toast.toast-success{border-color:rgba(30,215,96,0.3);background:rgba(10,40,20,0.95)}
+  .toast.toast-success .toast-icon{color:#1ed760}
+  .toast.toast-info{border-color:rgba(0,114,245,0.3);background:rgba(10,20,40,0.95)}
+  .toast.toast-info .toast-icon{color:#0072F5}
+  .toast-icon{flex-shrink:0;width:20px;height:20px;margin-top:1px}
+  .toast-body{flex:1}
+  .toast-title{font-weight:600;color:#fff;margin-bottom:2px;font-size:.85rem}
+  .toast-msg{font-size:.8rem;color:#999}
+  .toast-close{flex-shrink:0;background:none;border:none;color:#555;cursor:pointer;padding:2px;font-size:1.1rem;line-height:1;transition:color .15s}
+  .toast-close:hover{color:#fff}
+  .toast-action{display:inline-block;margin-top:8px;background:#0072F5;color:#fff;border:none;padding:6px 16px;border-radius:12px;font-size:.78rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s}
+  .toast-action:hover{background:#1a8aff}
+  .toast.removing{animation:toastOut .25s ease forwards}
+  @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
+
   footer{text-align:center;padding:48px 20px;color:#333;font-size:.78rem;border-top:1px solid rgba(255,255,255,0.04)}
   footer a{color:#0072F5;text-decoration:none}
 
@@ -181,6 +202,9 @@
   <div class="loading-text" id="loading-text">Connecting to Spotify...</div>
   <div class="loading-progress" id="loading-progress"></div>
 </div>
+
+<!-- Toast notification container -->
+<div class="toast-container" id="toast-container"></div>
 
 <!-- LANDING PAGE -->
 <div id="landing-page" class="landing">
@@ -271,6 +295,91 @@
 const SPOTIFY_CLIENT_ID = '6327aba2bbaf4fbcba4ef47ded399b81';
 const REDIRECT_URI = window.location.origin + window.location.pathname;
 const SCOPES = 'user-read-private user-read-email user-library-read user-follow-read user-top-read playlist-modify-public playlist-modify-private';
+
+// =============================================
+// TOAST NOTIFICATION SYSTEM (replaces alert())
+// =============================================
+function showToast(type, title, message, options = {}) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+
+  const icons = {
+    error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  };
+
+  let actionHtml = '';
+  if (options.action) {
+    actionHtml = '<button class="toast-action" id="toast-action-' + Date.now() + '">' + options.action.label + '</button>';
+  }
+
+  toast.innerHTML = icons[type] +
+    '<div class="toast-body"><div class="toast-title">' + title + '</div>' +
+    (message ? '<div class="toast-msg">' + message + '</div>' : '') +
+    actionHtml + '</div>' +
+    '<button class="toast-close" onclick="this.closest(\'.toast\').classList.add(\'removing\');setTimeout(()=>this.closest(\'.toast\').remove(),250)">&times;</button>';
+
+  container.appendChild(toast);
+
+  if (options.action) {
+    const actionBtn = toast.querySelector('.toast-action');
+    if (actionBtn) actionBtn.onclick = options.action.fn;
+  }
+
+  const duration = options.duration || 6000;
+  if (duration > 0) {
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.classList.add('removing');
+        setTimeout(() => toast.remove(), 250);
+      }
+    }, duration);
+  }
+  return toast;
+}
+
+// =============================================
+// SPOTIFY FETCH WRAPPER (token expiry handling)
+// =============================================
+let tokenExpiresAt = null;
+
+async function spotifyFetch(url, options = {}) {
+  // Check if token is likely expired before even trying
+  if (tokenExpiresAt && Date.now() > tokenExpiresAt) {
+    handleTokenExpiry();
+    throw new Error('Token expired');
+  }
+
+  const res = await fetch(url, options);
+
+  if (res.status === 401) {
+    handleTokenExpiry();
+    throw new Error('Token expired');
+  }
+
+  return res;
+}
+
+function handleTokenExpiry() {
+  // Prevent multiple expiry toasts
+  if (document.querySelector('.toast-token-expired')) return;
+
+  localStorage.removeItem('spotify_token');
+  currentToken = null;
+  currentProfile = null;
+  showLoading(false);
+
+  const toast = showToast('error', 'Session Expired', 'Your Spotify session has expired. Please reconnect to continue.', {
+    duration: 0,
+    action: {
+      label: 'Reconnect to Spotify',
+      fn: () => loginWithSpotify()
+    }
+  });
+  toast.classList.add('toast-token-expired');
+}
 
 // =============================================
 // GENRE TO MOOD MAPPING ENGINE
@@ -417,7 +526,7 @@ function base64encode(input) {
 }
 
 async function loginWithSpotify() {
-  if (!SPOTIFY_CLIENT_ID) { alert('Spotify Client ID not configured.'); return; }
+  if (!SPOTIFY_CLIENT_ID) { showToast('error', 'Configuration Error', 'Spotify Client ID is not configured.'); return; }
   const codeVerifier = generateRandomString(64);
   localStorage.setItem('code_verifier', codeVerifier);
   const hashed = await sha256(codeVerifier);
@@ -455,6 +564,11 @@ async function exchangeCodeForToken(code) {
       return null;
     }
     const data = await res.json();
+    // Store expiry time (Spotify tokens last ~3600s, subtract 60s buffer)
+    if (data.expires_in) {
+      tokenExpiresAt = Date.now() + (data.expires_in - 60) * 1000;
+      localStorage.setItem('token_expires_at', tokenExpiresAt.toString());
+    }
     return data.access_token;
   } catch(e) {
     console.error('Token exchange error:', e);
@@ -464,7 +578,7 @@ async function exchangeCodeForToken(code) {
 
 async function fetchSpotifyProfile(token) {
   try {
-    const res = await fetch('https://api.spotify.com/v1/me', {
+    const res = await spotifyFetch('https://api.spotify.com/v1/me', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!res.ok) throw new Error('Token expired');
@@ -482,7 +596,7 @@ async function fetchAllPages(url, token, extractItems, maxItems = 200) {
   let items = [];
   let next = url;
   while (next && items.length < maxItems) {
-    const res = await fetch(next, { headers: { 'Authorization': 'Bearer ' + token } });
+    const res = await spotifyFetch(next, { headers: { 'Authorization': 'Bearer ' + token } });
     if (!res.ok) break;
     const data = await res.json();
     const extracted = extractItems(data);
@@ -562,7 +676,7 @@ async function fetchFollowedArtists(token) {
   let items = [];
   let url = 'https://api.spotify.com/v1/me/following?type=artist&limit=50';
   while (url && items.length < 200) {
-    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    const res = await spotifyFetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
     if (!res.ok) break;
     const data = await res.json();
     const artists = data.artists.items.map(a => ({
@@ -597,7 +711,7 @@ async function enrichWithArtistGenres(items, token) {
   for (let i = 0; i < uniqueIds.length; i += 10) {
     const batch = uniqueIds.slice(i, i + 10);
     const results = await Promise.all(batch.map(id =>
-      fetch('https://api.spotify.com/v1/artists/' + id, {
+      spotifyFetch('https://api.spotify.com/v1/artists/' + id, {
         headers: { 'Authorization': 'Bearer ' + token }
       }).then(r => r.ok ? r.json() : null).catch(() => null)
     ));
@@ -636,7 +750,7 @@ async function enrichWithAudioFeatures(items, token) {
     const batch = trackIds.slice(i, i + 100);
     const ids = batch.map(x => x.trackId).join(',');
     try {
-      const res = await fetch('https://api.spotify.com/v1/audio-features?ids=' + ids, {
+      const res = await spotifyFetch('https://api.spotify.com/v1/audio-features?ids=' + ids, {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       if (res.ok) {
@@ -651,7 +765,7 @@ async function enrichWithAudioFeatures(items, token) {
         // Try individual fetches as fallback
         for (const x of batch) {
           try {
-            const r = await fetch('https://api.spotify.com/v1/audio-features/' + x.trackId, {
+            const r = await spotifyFetch('https://api.spotify.com/v1/audio-features/' + x.trackId, {
               headers: { 'Authorization': 'Bearer ' + token }
             });
             if (r.ok) {
@@ -685,12 +799,14 @@ let currentProfile = null;
 let currentToken = null;
 let currentType = null;
 let moodboardData = {}; // { moodId: [items] }
+let createdPlaylists = {}; // { moodId: { url, trackCount } } — prevents duplicates
 
 // =============================================
 // MOODBOARD GENERATION
 // =============================================
 async function generateMoodboard(type) {
   currentType = type;
+  createdPlaylists = {}; // Reset when switching moodboard type
   showLoading(true, 'Fetching your ' + (type === 'tracks' ? 'liked songs' : type) + '...');
 
   let items = [];
@@ -705,7 +821,9 @@ async function generateMoodboard(type) {
 
     if (items.length === 0) {
       showLoading(false);
-      alert('No ' + type + ' found in your Spotify library. Try a different category!');
+      showToast('info', 'Nothing Found', 'No ' + type + ' found in your Spotify library. Try a different category!', {
+        action: { label: 'Go Back', fn: () => backToSelector() }
+      });
       return;
     }
 
@@ -754,7 +872,9 @@ async function generateMoodboard(type) {
   } catch(e) {
     showLoading(false);
     console.error(e);
-    alert('Something went wrong fetching your data. Please try again.');
+    showToast('error', 'Something Went Wrong', 'Could not fetch your Spotify data. Please try again.', {
+      action: { label: 'Retry', fn: () => generateMoodboard(type) }
+    });
   }
 }
 
@@ -854,14 +974,19 @@ function renderMoodboard(type, totalItems) {
       const imgHtml = item.img
         ? '<img src="' + item.img + '" alt="' + escapedName + '" loading="lazy" onerror="handleImgError(this)">'
         : '<div class="img-placeholder">' + item.name + '</div>';
+      const hasUrl = item.url && item.url.length > 0;
+      const linkTag = hasUrl
+        ? '<a class="album-card" href="' + item.url + '" target="_blank" rel="noopener">'
+        : '<div class="album-card" style="cursor:default">';
+      const closingTag = hasUrl ? '</a>' : '</div>';
       gridHtml +=
-        '<a class="album-card" href="' + item.url + '" target="_blank" rel="noopener">' +
+        linkTag +
           '<div class="img-wrap">' + imgHtml +
             '<div class="play-badge"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>' +
           '</div>' +
           '<div class="album-name">' + item.name + '</div>' +
           '<div class="album-artist">' + item.artist + '</div>' +
-        '</a>';
+        closingTag;
     });
 
     const playlistBtnHtml = currentToken
@@ -928,6 +1053,12 @@ async function createPlaylistFromMood(moodId) {
   const btn = document.getElementById('playlist-btn-' + moodId);
   if (!btn || !currentToken || !currentProfile) return;
 
+  // Prevent duplicate playlist creation
+  if (createdPlaylists[moodId]) {
+    window.open(createdPlaylists[moodId].url, '_blank');
+    return;
+  }
+
   const moodConfig = MOOD_CONFIG.find(m => m.id === moodId);
   const items = moodboardData[moodId];
   if (!items || items.length === 0) return;
@@ -954,7 +1085,7 @@ async function createPlaylistFromMood(moodId) {
           console.log('[Playlist] Album URL:', item.url, '-> ID:', albumId);
           if (albumId) {
             try {
-              const res = await fetch('https://api.spotify.com/v1/albums/' + albumId + '/tracks?limit=50', {
+              const res = await spotifyFetch('https://api.spotify.com/v1/albums/' + albumId + '/tracks?limit=50', {
                 headers: { 'Authorization': 'Bearer ' + currentToken }
               });
               if (res.ok) {
@@ -976,7 +1107,7 @@ async function createPlaylistFromMood(moodId) {
       for (const item of items) {
         if (item.artistIds && item.artistIds[0]) {
           try {
-            const res = await fetch('https://api.spotify.com/v1/artists/' + item.artistIds[0] + '/top-tracks?market=US', {
+            const res = await spotifyFetch('https://api.spotify.com/v1/artists/' + item.artistIds[0] + '/top-tracks?market=US', {
               headers: { 'Authorization': 'Bearer ' + currentToken }
             });
             if (res.ok) {
@@ -999,7 +1130,7 @@ async function createPlaylistFromMood(moodId) {
     const playlistName = moodConfig.label + ' \u2014 Moods by ' + (currentProfile.display_name || 'Gal');
     const playlistDesc = moodConfig.meta + ' \u2022 Created with Moods by Gal';
 
-    const createRes = await fetch('https://api.spotify.com/v1/me/playlists', {
+    const createRes = await spotifyFetch('https://api.spotify.com/v1/me/playlists', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + currentToken,
@@ -1027,7 +1158,7 @@ async function createPlaylistFromMood(moodId) {
     let addedCount = 0;
     for (let i = 0; i < trackUris.length; i += 100) {
       const batch = trackUris.slice(i, i + 100);
-      const addRes = await fetch('https://api.spotify.com/v1/playlists/' + playlist.id + '/items', {
+      const addRes = await spotifyFetch('https://api.spotify.com/v1/playlists/' + playlist.id + '/items', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + currentToken,
@@ -1043,17 +1174,12 @@ async function createPlaylistFromMood(moodId) {
     }
     console.log('[Playlist] Added ' + addedCount + '/' + trackUris.length + ' tracks');
 
-    // 4. Success UI
+    // 4. Success UI — stays permanent to prevent duplicates
+    createdPlaylists[moodId] = { url: playlist.external_urls.spotify, trackCount: addedCount };
     btn.className = 'create-playlist-btn success';
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Playlist Created! (' + addedCount + ' tracks)';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Playlist Created (' + addedCount + ' tracks) \u2014 Open';
+    btn.disabled = false;
     btn.onclick = () => window.open(playlist.external_urls.spotify, '_blank');
-
-    setTimeout(() => {
-      btn.className = 'create-playlist-btn';
-      btn.innerHTML = originalHtml;
-      btn.disabled = false;
-      btn.onclick = () => createPlaylistFromMood(moodId);
-    }, 8000);
 
   } catch(e) {
     console.error('Create playlist error:', e);
@@ -1109,16 +1235,24 @@ async function copyShareLink() {
     }, 3000);
   } catch(e) {
     console.error('Share link error:', e);
-    // Fallback: copy plain URL
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
+    // Fallback: use a hidden textarea to copy (works in more contexts than clipboard API)
+    try {
+      const shareUrl = window.location.origin + window.location.pathname;
+      const ta = document.createElement('textarea');
+      ta.value = shareUrl;
+      ta.style.cssText = 'position:fixed;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
       btn.classList.add('copied');
       txt.textContent = 'Link Copied!';
       setTimeout(() => { btn.classList.remove('copied'); txt.textContent = 'Copy Link'; btn.disabled = false; }, 2000);
-    }).catch(() => {
-      alert('Could not copy link. Please try again.');
+    } catch(e2) {
+      showToast('info', 'Copy the Link', 'Your browser blocked clipboard access. Copy this URL manually: ' + window.location.origin + window.location.pathname, { duration: 10000 });
+      txt.textContent = 'Copy Link';
       btn.disabled = false;
-    });
+    }
   }
 }
 
@@ -1141,8 +1275,10 @@ function backToSelector() {
 function logoutSpotify() {
   localStorage.removeItem('spotify_token');
   localStorage.removeItem('code_verifier');
+  localStorage.removeItem('token_expires_at');
   currentToken = null;
   currentProfile = null;
+  tokenExpiresAt = null;
   document.getElementById('moodboard-view').style.display = 'none';
   document.getElementById('type-selector').style.display = 'none';
   document.getElementById('landing-page').style.display = 'flex';
@@ -1155,9 +1291,9 @@ async function prefetchCounts(token) {
   // Quick fetch just first page to get totals
   try {
     const [albumsRes, tracksRes, artistsRes] = await Promise.all([
-      fetch('https://api.spotify.com/v1/me/albums?limit=1', { headers: { 'Authorization': 'Bearer ' + token } }),
-      fetch('https://api.spotify.com/v1/me/tracks?limit=1', { headers: { 'Authorization': 'Bearer ' + token } }),
-      fetch('https://api.spotify.com/v1/me/following?type=artist&limit=1', { headers: { 'Authorization': 'Bearer ' + token } })
+      spotifyFetch('https://api.spotify.com/v1/me/albums?limit=1', { headers: { 'Authorization': 'Bearer ' + token } }),
+      spotifyFetch('https://api.spotify.com/v1/me/tracks?limit=1', { headers: { 'Authorization': 'Bearer ' + token } }),
+      spotifyFetch('https://api.spotify.com/v1/me/following?type=artist&limit=1', { headers: { 'Authorization': 'Bearer ' + token } })
     ]);
     if (albumsRes.ok) {
       const d = await albumsRes.json();
@@ -1171,7 +1307,13 @@ async function prefetchCounts(token) {
       const d = await artistsRes.json();
       document.getElementById('artists-count').textContent = (d.artists.total || 0) + ' artists followed';
     }
-  } catch(e) { console.log('Prefetch counts error:', e); }
+  } catch(e) {
+    console.log('Prefetch counts error:', e);
+    // Clear loading badges on failure
+    document.getElementById('albums-count').textContent = 'Saved albums';
+    document.getElementById('tracks-count').textContent = 'Liked songs';
+    document.getElementById('artists-count').textContent = 'Followed artists';
+  }
 }
 
 // =============================================
@@ -1227,10 +1369,17 @@ async function prefetchCounts(token) {
       localStorage.setItem('spotify_token', token);
     } else {
       showLoading(false);
+      showToast('error', 'Connection Failed', 'Could not connect to Spotify. This can happen if you denied permissions or took too long.', {
+        duration: 0,
+        action: { label: 'Try Again', fn: () => loginWithSpotify() }
+      });
     }
     window.history.replaceState(null, '', window.location.pathname);
   } else {
     token = localStorage.getItem('spotify_token');
+    // Restore token expiry time
+    const savedExpiry = localStorage.getItem('token_expires_at');
+    if (savedExpiry) tokenExpiresAt = parseInt(savedExpiry);
   }
 
   if (token) {
