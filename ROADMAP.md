@@ -10,13 +10,15 @@ A high-level view of where Moods by Gal is headed. For detailed task tracking, s
 
 Get the core app reliable and bug-free. Fix critical issues that block real users.
 
-- Fix token expiry handling (BUG-001)
-- Fix share view broken links (BUG-006)
-- Replace `alert()` with styled errors (BUG-004, FEAT-014)
+- ~~Fix token expiry handling (BUG-001)~~ Done
+- ~~Fix share view broken links (BUG-006)~~ Done
+- ~~Replace `alert()` with styled errors (BUG-004, FEAT-014)~~ Done
+- ~~Prevent duplicate playlists (BUG-005, FEAT-018)~~ Done
+- Audit & fix mood classification accuracy (BUG-011, FEAT-030)
 - Add users to Spotify dev dashboard
-- Prevent duplicate playlists (BUG-005, FEAT-018)
+- Browser back navigation (BUG-010)
 
-**Exit criteria:** A new user can log in, browse moods, create a playlist, and share a link without hitting a broken state.
+**Exit criteria:** A new user can log in, browse moods, create a playlist, and share a link without hitting a broken state. Songs are in the right mood categories.
 
 ---
 
