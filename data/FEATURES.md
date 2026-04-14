@@ -19,6 +19,8 @@
 | FEAT-009 | Dark aesthetic rebrand | Apr 6 | Pre-sprints | `9c3f0e0` |
 | FEAT-010 | Create Playlist from Mood | Apr 10 | Pre-sprints | `5f6e46d` |
 | FEAT-011 | User profile dropdown + logout | Apr 10 | Pre-sprints | `0f9e316` |
+| FEAT-014 | Toast notification system (replaced `alert()`) | Apr 14 | Sprint 001 | â |
+| FEAT-018 | Duplicate playlist prevention | Apr 14 | Sprint 001 | â |
 
 ## Backlog â Near Term
 
@@ -30,7 +32,7 @@
 | FEAT-015 | Playlist cover art (auto-collage) | P1 | Medium | Generate cover from mood's album art |
 | FEAT-016 | "Create All Playlists" button | P1 | Small | One click â all 7 mood playlists |
 | FEAT-017 | Browser back navigation | P1 | Small | pushState/popstate handling |
-| FEAT-018 | Prevent duplicate playlist creation | P1 | Small | Track created playlists, disable button |
+| FEAT-030 | Mood classification accuracy audit + improvement | P0 | Medium | Current genre-to-mood mapping misclassifies kids/upbeat music as Melancholy. Audit mapping table, add edge-case genres (children's, comedy, etc.), consider energy/valence signals. |
 
 ## Backlog â Medium Term
 
