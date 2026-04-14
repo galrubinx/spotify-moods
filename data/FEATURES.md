@@ -21,6 +21,7 @@
 | FEAT-011 | User profile dropdown + logout | Apr 10 | Pre-sprints | `0f9e316` |
 | FEAT-014 | Toast notification system (replaced `alert()`) | Apr 14 | Sprint 001 | â |
 | FEAT-018 | Duplicate playlist prevention | Apr 14 | Sprint 001 | â |
+| FEAT-030 | Mood classification v2 — Kids & Family + weighted keywords | Apr 14 | Sprint 001 | `d2be532` |
 
 ## Backlog â Near Term
 
@@ -32,7 +33,7 @@
 | FEAT-015 | Playlist cover art (auto-collage) | P1 | Medium | Generate cover from mood's album art |
 | FEAT-016 | "Create All Playlists" button | P1 | Small | One click â all 7 mood playlists |
 | FEAT-017 | Browser back navigation | P1 | Small | pushState/popstate handling |
-| FEAT-030 | Mood classification accuracy audit + improvement | P0 | Medium | Current genre-to-mood mapping misclassifies kids/upbeat music as Melancholy. Audit mapping table, add edge-case genres (children's, comedy, etc.), consider energy/valence signals. |
+| ~~FEAT-030~~ | ~~Mood classification accuracy audit + improvement~~ | ~~P0~~ | ~~Medium~~ | Shipped Apr 14 — classification v2 with Kids & Family mood, weighted keywords, kids priority check |
 
 ## Backlog â Medium Term
 
