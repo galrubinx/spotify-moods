@@ -224,7 +224,7 @@
       <p>Your moodboard is generated in seconds from your real library</p>
     </div>
     <div class="landing-feature">
-      <h3>7 Moods</h3>
+      <h3>8 Moods</h3>
       <p>Morning, Late Night, Workout, Melancholy, Chill, Party, Romantic</p>
     </div>
     <div class="landing-feature">
@@ -391,55 +391,69 @@ const MOOD_CONFIG = [
   { id: 'latenight',  label: 'Late Night',        emoji: '', meta: 'Smooth, atmospheric, after-hours' },
   { id: 'melancholy', label: 'Melancholy',        emoji: '', meta: 'Reflective, emotional, introspective' },
   { id: 'party',      label: 'Party & Social',    emoji: '', meta: 'Dance, fun, social energy' },
-  { id: 'romantic',   label: 'Romantic',           emoji: '', meta: 'Love, warmth, intimate moments' }
+  { id: 'romantic',   label: 'Romantic',           emoji: '', meta: 'Love, warmth, intimate moments' },
+  { id: 'kids',       label: 'Kids & Family',     emoji: '', meta: 'Fun, playful, sing-along energy' }
 ];
 
 // Genre keywords mapped to mood IDs (order = priority)
 const GENRE_MOOD_MAP = {
+  kids: [
+    { kw: 'children', w: 3 }, { kw: 'kids', w: 3 }, { kw: 'nursery', w: 3 },
+    { kw: 'disney', w: 3 }, { kw: "children's music", w: 3 },
+    'lullaby','cartoon','sing-along','toddler','family','kidz bop',
+    'sesame','wiggles','raffi','cocomelon','baby','preschool',
+    'kindermusik','storytime','playground','school','educational'
+  ],
   morning: [
-    'sunshine pop','morning','happy','indie pop','folk pop','chamber pop','twee',
-    'acoustic pop','bubblegum','surf','ska','ukulele','feelgood','bright',
+    { kw: 'sunshine pop', w: 3 }, { kw: 'happy', w: 3 }, { kw: 'feelgood', w: 3 },
+    'morning','indie pop','folk pop','chamber pop','twee',
+    'acoustic pop','bubblegum','surf','ska','ukulele','bright',
     'indie folk','singer-songwriter','stomp and holler','lilith','new americana',
     'folk','americana','bluegrass','country','roots','celtic','mandolin'
   ],
   chill: [
-    'chillwave','chillhop','lo-fi','lofi','downtempo','ambient','new age',
-    'study','minimal','drone','meditation','sleep','focus','chill',
+    { kw: 'ambient', w: 3 }, { kw: 'lo-fi', w: 3 }, { kw: 'meditation', w: 3 },
+    'chillwave','chillhop','lofi','downtempo','new age',
+    'study','minimal','drone','sleep','focus','chill',
     'vaporwave','mallsoft','slushwave','chillsynth','synthwave',
     'dream pop','shoegaze','ethereal','space','post-rock','slowcore',
     'instrumental','classical','piano','orchestral','chamber','baroque',
     'soundtrack','score','cinematic','neoclassical'
   ],
   workout: [
-    'edm','electronic','dance','drum and bass','dnb','dubstep','hardstyle',
+    { kw: 'edm', w: 3 }, { kw: 'metal', w: 3 }, { kw: 'hardcore', w: 3 }, { kw: 'drum and bass', w: 3 },
+    'electronic','dance','dnb','dubstep','hardstyle',
     'techno','trance','house','big room','electro','bass','trap','grime',
-    'punk','hardcore','metal','thrash','death metal','heavy metal','hard rock',
+    'punk','thrash','death metal','heavy metal','hard rock',
     'crossfit','workout','gym','power','energy','aggressive',
     'hip hop','rap','crunk','hyphy','bounce','gangsta','drill'
   ],
   latenight: [
-    'jazz','smooth jazz','nu jazz','acid jazz','bebop','cool jazz','fusion',
+    { kw: 'jazz', w: 3 }, { kw: 'smooth jazz', w: 3 }, { kw: 'trip hop', w: 3 },
+    'nu jazz','acid jazz','bebop','cool jazz','fusion',
     'r&b','neo soul','soul','motown','quiet storm','urban contemporary',
-    'trip hop','trip-hop','downtempo','lounge','bossa nova','mpb',
+    'trip-hop','downtempo','lounge','bossa nova','mpb',
     'late night','night','dark','noir','torch song','cabaret','blues'
   ],
   melancholy: [
-    'sad','emo','post-punk','gothic','darkwave','coldwave','deathrock',
-    'doom','sludge','black metal','atmospheric','depressive',
-    'melancholy','melancholia','rainy','heartbreak','funeral',
-    'grunge','alternative rock','noise rock','art rock',
-    'midwest emo','screamo','math rock','post-hardcore',
-    'singer-songwriter','folk','indie','chamber pop'
+    { kw: 'sad', w: 3 }, { kw: 'emo', w: 3 }, { kw: 'doom', w: 3 },
+    { kw: 'funeral', w: 3 }, { kw: 'depressive', w: 3 },
+    'post-punk','gothic','darkwave','coldwave','deathrock',
+    'sludge','black metal','atmospheric',
+    'melancholy','melancholia','rainy','heartbreak',
+    'grunge','midwest emo','screamo','post-hardcore'
   ],
   party: [
-    'pop','dance pop','electropop','synthpop','disco','nu disco',
-    'reggaeton','latin','latin pop','tropical','dancehall','soca',
-    'afrobeats','afropop','amapiano','funk','p funk','go-go',
+    { kw: 'dance pop', w: 3 }, { kw: 'disco', w: 3 }, { kw: 'reggaeton', w: 3 }, { kw: 'afrobeats', w: 3 },
+    'pop','electropop','synthpop','nu disco',
+    'latin','latin pop','tropical','dancehall','soca',
+    'afropop','amapiano','funk','p funk','go-go',
     'party','club','dj','remix','mashup','eurodance','italo disco',
     'k-pop','j-pop','c-pop','idol'
   ],
   romantic: [
-    'romance','love','ballad','power ballad','slow jam',
+    { kw: 'romance', w: 3 }, { kw: 'love', w: 3 }, { kw: 'ballad', w: 3 },
+    'power ballad','slow jam',
     'bossa nova','french pop','chanson','fado','bolero','tango',
     'smooth','sensual','intimate','serenade','crooner',
     'adult contemporary','easy listening','soft rock','yacht rock',
@@ -449,24 +463,35 @@ const GENRE_MOOD_MAP = {
 
 // Score an array of genre strings against mood map
 function categorizByGenres(genres) {
-  if (!genres || genres.length === 0) return null; // return null so we can fallback
+  if (!genres || genres.length === 0) return null;
+  const genreStr = genres.join(' ').toLowerCase();
+
+  // Priority check: kids keywords are very distinctive
+  const kidsKws = GENRE_MOOD_MAP.kids;
+  for (const entry of kidsKws) {
+    const kw = typeof entry === 'string' ? entry : entry.kw;
+    const w = typeof entry === 'string' ? 1 : entry.w;
+    if (w >= 3 && genreStr.includes(kw)) return 'kids';
+  }
+
+  // Weighted scoring for all moods
   const scores = {};
   MOOD_CONFIG.forEach(m => scores[m.id] = 0);
-  const genreStr = genres.join(' ').toLowerCase();
   for (const [moodId, keywords] of Object.entries(GENRE_MOOD_MAP)) {
-    for (const kw of keywords) {
+    for (const entry of keywords) {
+      const kw = typeof entry === 'string' ? entry : entry.kw;
+      const weight = typeof entry === 'string' ? 1 : (entry.w || 1);
       if (genreStr.includes(kw)) {
-        scores[moodId] += 1;
+        scores[moodId] += weight;
       }
     }
   }
-  // Find highest score
   let best = null;
   let bestScore = 0;
   for (const [moodId, score] of Object.entries(scores)) {
     if (score > bestScore) { bestScore = score; best = moodId; }
   }
-  return best; // null if no keywords matched
+  return best;
 }
 
 // Categorize by audio features (energy, valence, danceability, acousticness, tempo)
@@ -799,7 +824,7 @@ let currentProfile = null;
 let currentToken = null;
 let currentType = null;
 let moodboardData = {}; // { moodId: [items] }
-let createdPlaylists = {}; // { moodId: { url, trackCount } } — prevents duplicates
+let createdPlaylists = {}; // { moodId: { url, trackCount } } â prevents duplicates
 
 // =============================================
 // MOODBOARD GENERATION
@@ -1174,7 +1199,7 @@ async function createPlaylistFromMood(moodId) {
     }
     console.log('[Playlist] Added ' + addedCount + '/' + trackUris.length + ' tracks');
 
-    // 4. Success UI — stays permanent to prevent duplicates
+    // 4. Success UI â stays permanent to prevent duplicates
     createdPlaylists[moodId] = { url: playlist.external_urls.spotify, trackCount: addedCount };
     btn.className = 'create-playlist-btn success';
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Playlist Created (' + addedCount + ' tracks) \u2014 Open';
